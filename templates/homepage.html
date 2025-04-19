@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundDash - Urban Sound Monitoring</title>
+    <!-- Local Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Clean, Responsive Navbar -->
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <!-- Simple logo with audio emoji -->
+                <a class="navbar-brand" href="/">
+                    <span class="me-2">🔊</span> <strong>SoundDash</strong>
+                </a>
+                
+                <!-- Mobile toggle button -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Navigation menu -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">About</a>
+                        </li>
+                    </ul>
+                    <!-- Quick access dashboard button -->
+                    <a href="/select-variables" class="btn btn-light ms-lg-3 mt-3 mt-lg-0">View Dashboard</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section with improved visual hierarchy -->
+    <section class="bg-primary text-white py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="display-4 fw-bold mb-4">Smart Urban Sound Monitoring</h1>
+                    <p class="lead mb-5">SoundDash is a platform that collects and visualizes sound events detected by a distributed network of sensors, enhancing safety and operational efficiency in smart cities.</p>
+                    <a href="/select-variables" class="btn btn-light btn-lg px-4 py-2">Access Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual feature highlight with icons using emoji -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-icon mb-3">⏱️</div>
+                    <h3>Real-Time Monitoring</h3>
+                    <p class="text-muted">Track sound events across the city as they occur with minimal delay.</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-icon mb-3">🔊</div>
+                    <h3>Sound Analysis</h3>
+                    <p class="text-muted">Advanced sound processing techniques to identify urban acoustic events.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon mb-3">📊</div>
+                    <h3>Data Visualization</h3>
+                    <p class="text-muted">Understand sound patterns with intuitive graphs and visual reports.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Cards with enhanced design -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">How SoundDash Works</h2>
+            <div class="row g-4">
+                <!-- Card 1 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="card-number mb-3">01</div>
+                            <h3 class="card-title h5">Project Overview</h3>
+                            <p class="card-text">SoundDash provides a comprehensive solution for monitoring urban sound events, helping smart city control centers make informed decisions based on real-time acoustic data.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="card-number mb-3">02</div>
+                            <h3 class="card-title h5">How It Works</h3>
+                            <p class="card-text">Our network of sensors detects sound events throughout the city. The data is collected and presented on an intuitive dashboard for immediate analysis and action.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="card-number mb-3">03</div>
+                            <h3 class="card-title h5">Key Benefits</h3>
+                            <p class="card-text">Real-time monitoring and data visualization tools enable better urban management and enhanced safety responses across the city's infrastructure.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Technology Stack</h2>
+            <div class="row justify-content-center text-center">
+                <div class="col-md-10">
+                    <div class="row g-4">
+                        <div class="col-6 col-md-4">
+                            <div class="tech-card p-4 h-100">
+                                <h4 class="h5">Node-RED</h4>
+                                <p class="mb-0 text-muted">Flow-based programming for connecting hardware devices</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="tech-card p-4 h-100">
+                                <h4 class="h5">InfluxDB</h4>
+                                <p class="mb-0 text-muted">Time series database optimized for high-performance data storage</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="tech-card p-4 h-100">
+                                <h4 class="h5">Grafana</h4>
+                                <p class="mb-0 text-muted">Interactive visualization and analytics platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section with improved design -->
+    <section class="py-5 bg-primary text-white text-center" id="dashboard">
+        <div class="container">
+            <h2 class="mb-4">Ready to Monitor Your Urban Sound Environment?</h2>
+            <p class="lead mb-4">Access your real-time sound monitoring dashboard and start making data-driven decisions today.</p>
+            <a href="/select-variables" class="btn btn-light btn-lg px-4 py-2">Open Dashboard</a>
+        </div>
+    </section>
+
+    <!-- Partner section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Project Partners</h2>
+            <div class="row text-center g-4">
+                <div class="col-md-6">
+                    <div class="p-4 h-100">
+                        <h3 class="h5">Instituto Superior de Engenharia de Lisboa</h3>
+                        <p class="mb-0 text-muted">LAA – Laboratório de Áudio e Acústica do ISEL</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 h-100">
+                        <h3 class="h5">Instituto Politécnico de Beja</h3>
+                        <p class="mb-0 text-muted">Academic Research Partner</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 mb-4 mb-md-0">
+                    <h3 class="h5">SoundDash</h3>
+                    <p class="mb-0">Dashboard agregador de eventos sonoros em Smart Cities</p>
+                    <p class="small mt-2">Licenciatura em Engenharia Informática, Redes e Telecomunicações<br>
+                    Ano-Letivo 2024/2025</p>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 SoundDash. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Local Bootstrap JS Bundle -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
