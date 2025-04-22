@@ -6,8 +6,8 @@ import json
 HOST = "localhost"
 PORT = 5000
 
-filename = input("Please enter the filename:").strip()
-
+sensor_id,filename = input("Please enter the sensor id and the filename in this format :sensor id,filename:").strip().split(",")
+print(f"test {sensor_id} {filename}")
 client_socket = socket.socket()
 client_socket.connect((HOST,PORT))
 
@@ -16,7 +16,8 @@ with open(filename,"r") as f:
 
 batch_size = 16
 data_to_send = [data[0]]
-
+sensor_id_message = {"sensor_id":sensor_id} 
+client_socket.send(bytes(f"sensor_id:{sensor_id}\n","UTF-8"))
 
 for i,item in enumerate(data,1):
     data_to_send.append(item)

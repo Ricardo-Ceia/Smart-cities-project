@@ -1,17 +1,21 @@
 import json
 import time
-#import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
 import socket
 import threading
+
+
+def data_is_id(data):
+    return data.startswith("sensor_id:")
 
 
 BROKER = "172.17.0.2"
 MQTT_PORT = 1883
 TOPIC = "sensors/data"
 
-#mqtt_client = mqtt.Client()
-#mqtt_client.connect(BROKER, MQTT_PORT, 60)
+mqtt_client = mqtt.Client()
+mqtt_client.connect(BROKER, MQTT_PORT, 60)
 
 HOST = "localhost"  
 SERVER_PORT = 5000
@@ -22,18 +26,23 @@ def handle_client(conn,addr):
         buffer = ""
         while True:
             data = conn.recv(1024).decode()
+            #TODO optimize so it doesnt check every time for the id
+            if data_is_id(data):
+                #-2 cause of the \n sent on the client
+                sensor_id = data[len(data)-2:]
+                topic = TOPIC+sensor_id
+                print(f"THIS IS THE TOPIC:{topic}")
             if not data:
                 break
             buffer += data
             while '\n' in buffer:
                 line,buffer = buffer.split('\n',1) 
-                print(f"Recieved: {data} from->{str(addr)}")
                 try:
                     json_list = json.loads(line)
                     for json_obj in json_list:
-                       print(f"Received JSON: {json_obj}") 
-                       #mqtt_client.publish(TOPIC,json.dumps(json_obj))
+                       mqtt_client.publish(topic,json.dumps(json_obj))
                        print(f"Published to MQTT: {json_obj}")
+                       time.sleep(1)
                 except json.JSONDecodeError:
                     print("Warning: Received data is not valid JSON.")
     print(f"Connection finished with {str(addr)}")
@@ -50,6 +59,8 @@ try:
         try:
             conn, addr = server_socket.accept()
             thread = threading.Thread(target=handle_client, args=(conn, addr))
+            #TODO read about daemon and understand what´s going on 
+            thread.daemon = True
             thread.start()
             print(f"[{threading.active_count() - 1}] Active connections.")
         except socket.timeout:
@@ -58,5 +69,5 @@ try:
 except KeyboardInterrupt:
     print("Shutting down server...")
 finally:
-    #mqtt_client.disconnect()
+    mqtt_client.disconnect()
     server_socket.close()
