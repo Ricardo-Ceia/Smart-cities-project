@@ -1,0 +1,161 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "4099ef43.f9f65",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "mqtt",
+        "topic": "sensors/data",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "d056a7a3.2d5008",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "95f9c9bb.952f98"
+            ]
+        ]
+    },
+    {
+        "id": "792cfce8.9b8b54",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "60a6fdf3.f66164",
+        "name": "Influxdb",
+        "measurement": "sensor_data",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "ISEL",
+        "bucket": "PFC18",
+        "x": 440,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "82365874.737008",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "690eae93.60c76",
+        "name": "Influx serverless",
+        "measurement": "sound_level",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "ISEL",
+        "bucket": "PFC18",
+        "x": 500,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "20997386.a3480c",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "95f9c9bb.952f98",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "func": "// Converter msg.payload de string para objeto JSON\nmsg.payload = JSON.parse(msg.payload);\n\n// Converter timestamp para milissegundos (evita perda de precisão)\nvar timestamp_epoch = new Date(msg.payload.timestamp).valueOf();\n\n// Estruturar os dados corretamente\nvar data = {\n    measurement: msg.payload.measurement,\n    tags: {\n        sensor: msg.payload.tags.sensor\n    },\n    LAEA: msg.payload.LAEA,\n    LCpeak: msg.payload.LCpeak,\n    LCpeakT: msg.payload.LCpeakT,\n    LAFmax: msg.payload.LAFmax,\n    LAFmaxT: msg.payload.LAFmaxT,\n    LAFmin: msg.payload.LAFmin,\n    LAFminT: msg.payload.LAFminT,\n    LAeq: msg.payload.LAeq,\n\n    \"25_HZ\": msg.payload.BT25,\n    \"31_5_HZ\": msg.payload.BT31_5,\n    \"40_HZ\": msg.payload.BT40,\n    \"50_HZ\": msg.payload.BT50,\n    \"63_HZ\": msg.payload.BT63,\n    \"80_HZ\": msg.payload.BT80,\n    \"100_HZ\": msg.payload.BT100,\n    \"125_HZ\": msg.payload.BT125,\n    \"160_HZ\": msg.payload.BT160,\n    \"200_HZ\": msg.payload.BT200,\n    \"250_HZ\": msg.payload.BT250,\n    \"315_HZ\": msg.payload.BT315,\n    \"400_HZ\": msg.payload.BT400,\n    \"500_HZ\": msg.payload.BT500,\n    \"630_HZ\": msg.payload.BT630,\n    \"800_HZ\": msg.payload.BT800,\n    \"1000_HZ\": msg.payload.BT1000,\n    \"1250_HZ\": msg.payload.BT1250,\n    \"1600_HZ\": msg.payload.BT1600,\n    \"2000_HZ\": msg.payload.BT2000,\n    \"2500_HZ\": msg.payload.BT2500,\n    \"3150_HZ\": msg.payload.BT3150,\n    \"4000_HZ\": msg.payload.BT4000,\n    \"5000_HZ\": msg.payload.BT5000,\n    \"6300_HZ\": msg.payload.BT6300,\n    \"8000_HZ\": msg.payload.BT8000,\n    \"10000_HZ\": msg.payload.BT10000,\n    \"12500_HZ\": msg.payload.BT12500,\n    \"16000_HZ\": msg.payload.BT16000,\n    \"20000_HZ\": msg.payload.BT20000,\n\n    time: timestamp_epoch,\n    sensor_id: msg.payload.sensor_id\n};\n\n// Exibir no Debug\nnode.warn(data);\n\n// Retornar o novo objeto dentro do payload\nreturn { payload: data };",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 260,
+        "y": 360,
+        "wires": [
+            [
+                "82365874.737008"
+            ]
+        ]
+    },
+    {
+        "id": "d056a7a3.2d5008",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "MQTT Sensor Data",
+        "broker": "172.17.0.2",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "60a6fdf3.f66164",
+        "type": "influxdb",
+        "z": "",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "BD",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://192.168.100.4:8086",
+        "timeout": "10",
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "690eae93.60c76",
+        "type": "influxdb",
+        "z": "",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "BD serverless",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "https://eu-central-1-1.aws.cloud2.influxdata.com",
+        "timeout": "10",
+        "rejectUnauthorized": false
+    }
+]
