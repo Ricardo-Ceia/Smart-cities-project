@@ -3,117 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SoundDash - Urban Sound Monitoring</title>
-    <!-- Local Bootstrap CSS -->
+    <title>SoundDash - Monitorização de sons urbanos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .navbar-brand span {
+            font-size: 1.5rem;
+        }
+        .hero-section {
+            background-color: #26a69a; /* Cor primária do tema */
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .hero-section p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+        .dashboard-buttons .btn {
+            font-size: 1.1rem;
+            padding: 12px 30px;
+            margin: 10px;
+            border-radius: 50px; /* Botões arredondados */
+        }
+        .dashboard-buttons .btn-light {
+            background-color: #fff;
+            color: #26a69a;
+            border: 2px solid #fff;
+        }
+        .dashboard-buttons .btn-outline-light {
+            color: #fff;
+            border: 2px solid #fff;
+        }
+        .dashboard-buttons .btn-light:hover,
+        .dashboard-buttons .btn-outline-light:hover {
+            opacity: 0.9;
+        }
+        .info-section {
+            padding: 60px 0;
+            text-align: center;
+        }
+        .info-section h2 {
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #26a69a;
+        }
+        .info-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .info-card .icon {
+            font-size: 3rem;
+            color: #26a69a;
+            margin-bottom: 15px;
+        }
+        .info-card h3 {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .info-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        footer h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        footer p {
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+        .map-section {
+            padding: 60px 0;
+            background-color: #fff;
+        }
+        .map-section h2 {
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #26a69a;
+            text-align: center;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .sensor-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .sensor-info h4 {
+            color: #26a69a;
+            margin-bottom: 15px;
+        }
+        .sensor-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
-    <!-- Clean, Responsive Navbar -->
     <header class="sticky-top">
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <!-- Simple logo with audio emoji -->
                 <a class="navbar-brand" href="/">
                     <span class="me-2">🔊</span> <strong>SoundDash</strong>
                 </a>
-                
-                <!-- Mobile toggle button -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
-                <!-- Navigation menu -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link active" href="/">Home</a>
+                            <a class="nav-link" href="/live_monitor">Monitorização ao Vivo</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/dashboard">Dashboard</a>
+                            <a class="nav-link" href="/interval_monitor">Monitorização por Intervalo</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about">About</a>
+                        <li class="nav-item ">
+                            <a class="nav-link" href="/events">Eventos</a>
+                        </li>
+                        <li class="nav-item ms-lg-3">
+                            <a class="btn btn-outline-light" href="/admin_login">Login de Admin</a>
                         </li>
                     </ul>
-                    <!-- Quick access dashboard button -->
-                    <a href="/select-variables" class="btn btn-light ms-lg-3 mt-3 mt-lg-0">View Dashboard</a>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- Hero Section with improved visual hierarchy -->
-    <section class="bg-primary text-white py-5">
+    <section class="hero-section">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 text-center">
-                    <h1 class="display-4 fw-bold mb-4">Smart Urban Sound Monitoring</h1>
-                    <p class="lead mb-5">SoundDash is a platform that collects and visualizes sound events detected by a distributed network of sensors, enhancing safety and operational efficiency in smart cities.</p>
-                    <a href="/select-variables" class="btn btn-light btn-lg px-4 py-2">Access Dashboard</a>
-                </div>
+            <h1 class="display-4">Monitorização inteligente de sons urbanos</h1>
+            <p class="lead">Plataforma para monitorização e análise de eventos sonoros em cidades.</p>
+            <div class="dashboard-buttons">
+                <a href="/live_monitor" class="btn btn-light">Monitorização ao Vivo</a>
+                <a href="/interval_monitor" class="btn btn-light">Monitorização por Intervalo</a>
+                <a  href="/events" class="btn btn-light">Eventos</a>
             </div>
         </div>
     </section>
 
-    <!-- Visual feature highlight with icons using emoji -->
-    <section class="py-5 bg-light">
+    <section class="info-section bg-light">
         <div class="container">
-            <div class="row text-center mb-5">
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <div class="feature-icon mb-3">⏱️</div>
-                    <h3>Real-Time Monitoring</h3>
-                    <p class="text-muted">Track sound events across the city as they occur with minimal delay.</p>
-                </div>
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <div class="feature-icon mb-3">🔊</div>
-                    <h3>Sound Analysis</h3>
-                    <p class="text-muted">Advanced sound processing techniques to identify urban acoustic events.</p>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-icon mb-3">📊</div>
-                    <h3>Data Visualization</h3>
-                    <p class="text-muted">Understand sound patterns with intuitive graphs and visual reports.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Info Cards with enhanced design -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-5">How SoundDash Works</h2>
+            <h2>Funcionalidades Principais</h2>
             <div class="row g-4">
-                <!-- Card 1 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="card-number mb-3">01</div>
-                            <h3 class="card-title h5">Project Overview</h3>
-                            <p class="card-text">SoundDash provides a comprehensive solution for monitoring urban sound events, helping smart city control centers make informed decisions based on real-time acoustic data.</p>
-                        </div>
+                    <div class="info-card">
+                        <div class="icon">⏱️</div>
+                        <h3>Monitorização em Tempo Real</h3>
+                        <p>Acompanhe eventos sonoros em toda a cidade à medida que ocorrem com atraso mínimo.</p>
                     </div>
                 </div>
-                
-                <!-- Card 2 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="card-number mb-3">02</div>
-                            <h3 class="card-title h5">How It Works</h3>
-                            <p class="card-text">Our network of sensors detects sound events throughout the city. The data is collected and presented on an intuitive dashboard for immediate analysis and action.</p>
-                        </div>
+                    <div class="info-card">
+                        <div class="icon">🔊</div>
+                        <h3>Análise de Som</h3>
+                        <p>Técnicas avançadas de processamento de som para identificar eventos acústicos urbanos.</p>
                     </div>
                 </div>
-                
-                <!-- Card 3 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="card-number mb-3">03</div>
-                            <h3 class="card-title h5">Key Benefits</h3>
-                            <p class="card-text">Real-time monitoring and data visualization tools enable better urban management and enhanced safety responses across the city's infrastructure.</p>
+                    <div class="info-card">
+                        <div class="icon">📊</div>
+                        <h3>Visualização de Dados</h3>
+                        <p>Compreenda padrões de som com gráficos intuitivos e relatórios visuais.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="map-section">
+        <div class="container">
+            <h2>Localização dos Sensores</h2>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div id="map"></div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="sensor-info">
+                        <h4>Sensores Ativos</h4>
+                        <div class="mb-3">
+                            <h5>Sensor 1 - ISEL</h5>
+                            <span class="sensor-status status-active">Ativo</span>
+                            <p class="mt-2 mb-1"><small>📍 Lat: 38.756509, Lng: -9.116227</small></p>
                         </div>
                     </div>
                 </div>
@@ -121,72 +232,10 @@
         </div>
     </section>
 
-    <!-- Technology Stack -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-5">Technology Stack</h2>
-            <div class="row justify-content-center text-center">
-                <div class="col-md-10">
-                    <div class="row g-4">
-                        <div class="col-6 col-md-4">
-                            <div class="tech-card p-4 h-100">
-                                <h4 class="h5">Node-RED</h4>
-                                <p class="mb-0 text-muted">Flow-based programming for connecting hardware devices</p>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <div class="tech-card p-4 h-100">
-                                <h4 class="h5">InfluxDB</h4>
-                                <p class="mb-0 text-muted">Time series database optimized for high-performance data storage</p>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <div class="tech-card p-4 h-100">
-                                <h4 class="h5">Grafana</h4>
-                                <p class="mb-0 text-muted">Interactive visualization and analytics platform</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section with improved design -->
-    <section class="py-5 bg-primary text-white text-center" id="dashboard">
-        <div class="container">
-            <h2 class="mb-4">Ready to Monitor Your Urban Sound Environment?</h2>
-            <p class="lead mb-4">Access your real-time sound monitoring dashboard and start making data-driven decisions today.</p>
-            <a href="/select-variables" class="btn btn-light btn-lg px-4 py-2">Open Dashboard</a>
-        </div>
-    </section>
-
-    <!-- Partner section -->
-    <section class="py-5 bg-light">
-        <div class="container">
-            <h2 class="text-center mb-5">Project Partners</h2>
-            <div class="row text-center g-4">
-                <div class="col-md-6">
-                    <div class="p-4 h-100">
-                        <h3 class="h5">Instituto Superior de Engenharia de Lisboa</h3>
-                        <p class="mb-0 text-muted">LAA – Laboratório de Áudio e Acústica do ISEL</p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="p-4 h-100">
-                        <h3 class="h5">Instituto Politécnico de Beja</h3>
-                        <p class="mb-0 text-muted">Academic Research Partner</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
     <footer class="bg-dark text-white py-4">
         <div class="container">
             <div class="row">
-                <div class="col-md-12 mb-4 mb-md-0">
+                <div class="col-md-12">
                     <h3 class="h5">SoundDash</h3>
                     <p class="mb-0">Dashboard agregador de eventos sonoros em Smart Cities</p>
                     <p class="small mt-2">Licenciatura em Engenharia Informática, Redes e Telecomunicações<br>
@@ -195,12 +244,53 @@
             </div>
             <hr class="mt-4">
             <div class="text-center">
-                <p class="mb-0">&copy; 2025 SoundDash. All rights reserved.</p>
+                <p class="mb-0">&copy; 2025 SoundDash. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Local Bootstrap JS Bundle -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializar o mapa centrado em Lisboa
+        var map = L.map('map').setView([38.7223, -9.1393], 12);
+
+        // Adicionar camada do OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Definir localizações dos sensores
+        var sensors = [
+            {
+                name: "Sensor 1 - ISEL",
+                lat: 38.756509,
+                lng: -9.116227,
+                status: "active"
+            }
+        ];
+
+        // Adicionar marcadores para cada sensor
+        sensors.forEach(function(sensor) {
+            var iconColor = sensor.status === 'active' ? 'green' : 'red';
+            var iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + iconColor + '.png';
+            
+            var customIcon = L.icon({
+                iconUrl: iconUrl,
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            var marker = L.marker([sensor.lat, sensor.lng], {icon: customIcon}).addTo(map);
+            
+            var popupContent = '<b>' + sensor.name + '</b><br>' +
+                             'Status: ' + (sensor.status === 'active' ? 'Ativo' : 'Inativo') + '<br>';
+            
+            marker.bindPopup(popupContent);
+        });
+    </script>
 </body>
 </html>

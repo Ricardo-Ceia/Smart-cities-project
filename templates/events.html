@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundDash - Análise de Eventos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .navbar-brand span {
+            font-size: 1.5rem;
+        }
+        .hero-section {
+            background-color: #26a69a;
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .hero-section p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+        .form-section {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .results-section {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px;
+        }
+        .event-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .event-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .event-header {
+            background: linear-gradient(45deg, #26a69a, #00695c);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .event-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .event-types {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .lcpeak-values {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #26a69a;
+            border-color: #26a69a;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+        }
+        .btn-primary:hover {
+            background-color: #00695c;
+            border-color: #00695c;
+            opacity: 0.9;
+        }
+        .alert-info {
+            background-color: #e0f2f1;
+            border-color: #26a69a;
+            color: #00695c;
+        }
+        .spinner-border {
+            color: #26a69a;
+        }
+        .event-type-badge {
+            display: inline-block;
+            background-color: #26a69a;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        .event-type-badge.inactive {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .lcpeak-chart {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .lcpeak-bar {
+            background-color: #26a69a;
+            height: 20px;
+            border-radius: 10px;
+            margin: 2px 0;
+            position: relative;
+        }
+        .lcpeak-value {
+            position: absolute;
+            right: 5px;
+            color: white;
+            font-size: 0.8rem;
+            line-height: 20px;
+        }
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        footer h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        footer p {
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4">Análise de Eventos Sonoros</h1>
+            <p class="lead">Explore eventos detectados por sensores num período específico</p>
+        </div>
+    </section>
+
+    <div class="container mt-5">
+        <div class="row mb-3">
+            <div class="col-12 text-end">
+                <a href="/" class="btn btn-primary">← Voltar para Home</a>
+            </div>
+        </div>
+        
+        <!-- Formulário de Pesquisa -->
+        <div class="form-section">
+            <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Filtrar Eventos</h2>
+            <form id="eventForm">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="sensorId" class="form-label">Sensor ID</label>
+                        <input type="text" class="form-control" id="sensorId" placeholder="ex: 1" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">Data Início</label>
+                        <input type="datetime-local" class="form-control" id="startDate" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">Data Fim</label>
+                        <input type="datetime-local" class="form-control" id="endDate" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100" id="searchBtn">
+                            <span class="spinner-border spinner-border-sm me-2 d-none" id="loadingSpinner"></span>
+                            Pesquisar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Seção de Resultados -->
+        <div class="results-section d-none" id="resultsSection">
+            <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Eventos Detectados</h2>
+            
+            <!-- Resumo -->
+            <div class="alert alert-info" id="summaryAlert">
+                <h5>Resumo dos Resultados</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Total de Eventos:</strong> <span id="totalEvents">0</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Período:</strong> <span id="periodRange">-</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Sensor:</strong> <span id="sensorIdResult">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Eventos -->
+            <div id="eventsList"></div>
+        </div>
+
+        <!-- Mensagem de Erro -->
+        <div class="alert alert-danger d-none" id="errorAlert">
+            <h5>Erro</h5>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('eventForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+        
+            const sensorId = document.getElementById('sensorId').value.trim();
+            // Acrescentar 'Z' para dizer que é UTC, sem converter
+            const startDate = document.getElementById('startDate').value+":00.000Z";
+            const endDate = document.getElementById('endDate').value+":00.000Z";
+
+            console.log(startDate, endDate);  // enviar para backend no formato UTC correto
+        
+            const searchBtn = document.getElementById('searchBtn');
+            const spinner = document.getElementById('loadingSpinner');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorAlert = document.getElementById('errorAlert');
+            const errorMessage = document.getElementById('errorMessage');
+            const totalEvents = document.getElementById('totalEvents');
+            const periodRange = document.getElementById('periodRange');
+            const sensorIdResult = document.getElementById('sensorIdResult');
+            const eventsList = document.getElementById('eventsList');
+        
+            // Reset UI
+            resultsSection.classList.add('d-none');
+            errorAlert.classList.add('d-none');
+            spinner.classList.remove('d-none');
+            searchBtn.disabled = true;
+        
+            try {
+                const response = await fetch('/api/sensor-events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sensor_id: sensorId,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+        
+                const data = await response.json();
+        
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro ao buscar eventos');
+                }
+        
+                // Atualizar resumo
+                totalEvents.textContent = data.length;
+                periodRange.textContent = `${startDate.slice(0, 10)} a ${endDate.slice(0, 10)}`;
+                sensorIdResult.textContent = sensorId;
+        
+                // Limpar e preencher eventos
+                eventsList.innerHTML = '';
+        
+                if (data.length === 0) {
+                    eventsList.innerHTML = `<div class="alert alert-warning">Nenhum evento encontrado nesse período.</div>`;
+                }
+        
+                data.forEach((event, index) => {
+                    const start = new Date(event.start_time);
+                    const end = new Date(event.end_time);
+                    const durationSeconds = ((end - start) / 1000).toFixed(2);
+        
+                    // Média dos EventTypes
+                    const averageTypes = {};
+                    event.event_types.forEach(types => {
+                        Object.entries(types).forEach(([key, val]) => {
+                            if (!averageTypes[key]) averageTypes[key] = [];
+                            averageTypes[key].push(val);
+                        });
+                    });
+                    const avgTypeValues = Object.entries(averageTypes).map(([key, values]) => {
+                        const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+                        return { key, avg };
+                    });
+                    const topEventType = avgTypeValues.sort((a, b) => b.avg - a.avg)[0];
+        
+                    // LCpeak máximo
+                    const maxLCpeak = Math.max(...event.lcpeak_values).toFixed(2);
+        
+                    // Renderização do card
+                    const eventHTML = `
+                        <div class="event-card">
+                            <div class="event-header">
+                                <h5>Evento ${index + 1}</h5>
+                                <p>
+                                    <strong>Início:</strong> ${start.toLocaleString()}<br>
+                                    <strong>Fim:</strong> ${end.toLocaleString()}<br>
+                                    <strong>Duração:</strong> ${durationSeconds} segundos
+                                </p>
+                            </div>
+                            <div class="event-details">
+                                <div class="event-types">
+                                    <h6>EventType dominante</h6>
+                                    <span class="event-type-badge">${topEventType.key}: ${topEventType.avg.toFixed(2)}</span>
+                                </div>
+                                <div class="lcpeak-values">
+                                    <h6>LCpeak Máximo</h6>
+                                    <span class="event-type-badge">${maxLCpeak} dB</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    eventsList.innerHTML += eventHTML;
+                });
+        
+                resultsSection.classList.remove('d-none');
+        
+            } catch (err) {
+                errorMessage.textContent = err.message;
+                errorAlert.classList.remove('d-none');
+            } finally {
+                spinner.classList.add('d-none');
+                searchBtn.disabled = false;
+            }
+        });
+        </script>        
+</body>
+</html>

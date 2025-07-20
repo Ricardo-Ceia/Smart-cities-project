@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor de Configuração Sound Meter</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  <style>
+    body { padding: 30px; }
+    .form-control, .form-select { margin-bottom: 15px; }
+    .form-label { font-weight: bold; }
+    .section-title {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+    }
+    #jsonPreview {
+      white-space: pre-wrap;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Editor de Configuração Sound Meter</h1>
+    <a href="/" class="btn btn-primary">← Voltar para Home</a>
+  </div>
+
+  <!-- Upload existente -->
+  <div class="mb-4">
+    <label class="form-label">Carregar configuração existente (.json)</label>
+    <input type="file" id="jsonUpload" accept=".json" class="form-control">
+  </div>
+
+  <form id="configForm">
+    <div class="row" id="formFields"></div>
+    <button type="submit" class="btn btn-primary mt-3">Gerar e Descarregar JSON</button>
+  </form>
+
+  <div id="jsonPreview" class="d-none mt-4"></div>
+  <div class="alert alert-success mt-3 d-none" id="successMessage">
+    O ficheiro JSON foi gerado e descarregado com sucesso!
+  </div>
+</div>
+
+<script>
+const fields = {
+  "Geral": {
+    sensor: { type: "select", options: [1, 2, 3, 4], exclude: true }, // << EXCLUDE from JSON
+    identification: "text",
+    input_device: "text",
+    output_path: "text",
+    output_filename: "text",
+    output_format: { type: "select", options: [".csv", ".txt"] }
+  },
+  "Áudio": {
+    sample_rate: "number",
+    channels: "number",
+    bits_per_sample: "number",
+    block_size: "number",
+    segment_duration: "number",
+    laeq_time: "number",
+    calibration_reference: { type: "number", step: "0.01" },
+    calibration_delta: { type: "number", step: "0.000001" }
+  },
+  "Gravação": {
+    levels_record_period: "number",
+    audio_loop_recording: "number",
+    audio_file_duration: "number",
+    audio_record_ok: "number",
+    data_loop_recording: "number",
+    data_file_duration: "number",
+    data_record_ok: "number"
+  },
+  "MQTT": {
+    mqtt_enable: { type: "select", options: ["true", "false"] },
+    mqtt_broker: "text",
+    mqtt_topic: "text",
+    mqtt_device_credential: "text",
+    mqtt_qos: "number"
+  },
+  "Socket/Outros": {
+    server_socket: "text",
+    record_period: "number",
+    file_period: "number"
+  }
+};
+
+// Criar formulário dinâmico
+function gerarFormulario(json = {}) {
+  const container = document.getElementById("formFields");
+  container.innerHTML = "";
+
+  Object.entries(fields).forEach(([section, campos]) => {
+    const sectionTitle = document.createElement("div");
+    sectionTitle.className = "section-title";
+    sectionTitle.textContent = section;
+    container.appendChild(sectionTitle);
+
+    Object.entries(campos).forEach(([nome, tipo]) => {
+      const col = document.createElement("div");
+      col.className = "col-md-6";
+
+      const label = document.createElement("label");
+      label.className = "form-label";
+      label.textContent = nome;
+
+      let input;
+
+      if (typeof tipo === "object" && tipo.type === "select") {
+        input = document.createElement("select");
+        input.className = "form-select";
+        input.name = nome;
+        tipo.options.forEach(opt => {
+          const option = document.createElement("option");
+          option.value = opt;
+          option.text = opt;
+          input.appendChild(option);
+        });
+      } else {
+        input = document.createElement("input");
+        input.className = "form-control";
+        input.name = nome;
+        input.type = typeof tipo === "string" ? tipo : tipo.type;
+        if (tipo.step) input.step = tipo.step;
+      }
+
+      if (json[nome] !== undefined) input.value = json[nome];
+      input.addEventListener("input", atualizarPreview);
+
+      col.appendChild(label);
+      col.appendChild(input);
+      container.appendChild(col);
+    });
+  });
+
+  atualizarPreview();
+}
+
+// Atualizar pré-visualização JSON (removendo sensor)
+function atualizarPreview() {
+  const form = document.getElementById("configForm");
+  const preview = document.getElementById("jsonPreview");
+  const data = {};
+
+  Array.from(form.elements).forEach(el => {
+    if (el.name && !fields["Geral"].sensor.exclude) {
+      if (el.type === 'number') {
+        data[el.name] = parseFloat(el.value);
+      } else if (el.type === 'select-one' && (el.value === 'true' || el.value === 'false')) {
+        data[el.name] = el.value === 'true';
+      } else {
+        data[el.name] = el.value;
+      }
+    } else if (el.name && el.name !== "sensor") { // não incluir sensor
+      if (el.type === 'number') {
+        data[el.name] = parseFloat(el.value);
+      } else if (el.type === 'select-one' && (el.value === 'true' || el.value === 'false')) {
+        data[el.name] = el.value === 'true';
+      } else {
+        data[el.name] = el.value;
+      }
+    }
+  });
+
+  preview.classList.remove("d-none");
+  preview.textContent = JSON.stringify(data, null, 2);
+}
+
+// Submeter formulário (removendo sensor)
+document.getElementById("configForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const data = {};
+  Array.from(form.elements).forEach(el => {
+    if (el.name && el.name !== "sensor") { // sensor excluído
+      if (el.type === 'number') {
+        data[el.name] = parseFloat(el.value);
+      } else if (el.type === 'select-one' && (el.value === 'true' || el.value === 'false')) {
+        data[el.name] = el.value === 'true';
+      } else {
+        data[el.name] = el.value;
+      }
+    }
+  });
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sound_meter_config.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+  document.getElementById("successMessage").classList.remove("d-none");
+});
+
+// Upload de ficheiro JSON existente
+document.getElementById("jsonUpload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const json = JSON.parse(e.target.result);
+      gerarFormulario(json);
+    } catch (err) {
+      alert("Erro ao ler o ficheiro JSON.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Inicializar formulário vazio
+gerarFormulario();
+</script>
+</body>
+</html>

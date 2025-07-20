@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta id="my-data" data-name="{{data}}" data-other="{{other}}">
+  <title>SoundDash Live Monitor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  <style>
+    /* Keep all the CSS that was in sound_monitor.html */
+    :root {
+     --primary-color: #26a69a;
+     --secondary-color: #f5f5f5;
+     --border-color: #e0e0e0;
+     --tab-bg: #f5f5f5;
+     --tab-active: #26a69a;
+     --tab-text: #333;
+     --tab-text-active: #fff;
+   }
+   
+   body {
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+     background-color: #fff;
+     color: #333;
+   }
+   
+   .nav-tabs {
+     border-bottom: 2px solid var(--border-color);
+     background-color: var(--tab-bg);
+     padding: 0;
+     border-radius: 4px 4px 0 0;
+   }
+   
+   .nav-tabs .nav-link {
+     border: none;
+     color: var(--tab-text);
+     font-weight: 500;
+     padding: 10px 30px;
+     border-radius: 0;
+     margin-right: 0;
+     transition: all 0.3s ease;
+   }
+   
+   .nav-tabs .nav-link.active {
+     background-color: var(--tab-active);
+     color: var(--tab-text-active);
+     border-bottom: none;
+   }
+   
+   .live-controls {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 12px;
+   align-items: center;
+   margin-bottom: 15px;
+ }
+
+ .live-controls select, .live-controls button {
+   padding: 6px 12px;
+   border-radius: 6px;
+   border: 1px solid #ccc;
+   background: #fff;
+   font-size: 14px;
+ }
+
+ .parameter-selector {
+   width: 120px;
+ }
+
+ .sensor-selection-container {
+   border: 1px solid #ddd;
+   border-radius: 8px;
+   padding: 12px;
+   background-color: #f9f9f9;
+   margin-bottom: 15px;
+ }
+
+ /* Custom Dropdown Styles */
+ .sensor-dropdown {
+   position: relative;
+   width: 100%;
+   margin-bottom: 10px;
+ }
+
+ .sensor-dropdown-toggle {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 10px 15px;
+   background-color: white;
+   border: 2px solid var(--border-color);
+   border-radius: 6px;
+   cursor: pointer;
+   transition: all 0.3s ease;
+   min-height: 45px;
+ }
+
+ .sensor-dropdown-toggle:hover {
+   border-color: var(--primary-color);
+ }
+
+ .sensor-dropdown.open .sensor-dropdown-toggle {
+   border-color: var(--primary-color);
+   border-bottom-left-radius: 0;
+   border-bottom-right-radius: 0;
+ }
+
+ .dropdown-arrow {
+   transition: transform 0.3s ease;
+   color: #666;
+ }
+
+ .sensor-dropdown.open .dropdown-arrow {
+   transform: rotate(180deg);
+ }
+
+ .sensor-dropdown-menu {
+   position: absolute;
+   top: 100%;
+   left: 0;
+   right: 0;
+   background-color: white;
+   border: 2px solid var(--primary-color);
+   border-top: none;
+   border-radius: 0 0 6px 6px;
+   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+   z-index: 1000;
+   max-height: 200px;
+   overflow-y: auto;
+ }
+
+ .sensor-dropdown-item {
+   display: flex;
+   align-items: center;
+   padding: 10px 15px;
+   cursor: pointer;
+   transition: background-color 0.2s ease;
+   border-bottom: 1px solid #f0f0f0;
+ }
+
+ .sensor-dropdown-item:hover {
+   background-color: #f8f9fa;
+ }
+
+ .sensor-dropdown-item.header {
+   background-color: #f8f9fa;
+   font-weight: 600;
+   border-bottom: 2px solid var(--border-color);
+ }
+
+ .sensor-dropdown-item input[type="checkbox"] {
+   margin-right: 10px;
+   transform: scale(1.2);
+ }
+
+ .sensor-dropdown-item label {
+   cursor: pointer;
+   margin: 0;
+   flex: 1;
+ }
+
+ .selection-count {
+   background-color: var(--primary-color);
+   color: white;
+   padding: 2px 6px;
+   border-radius: 10px;
+   font-size: 12px;
+   margin-left: 8px;
+ }
+
+ .search-btn {
+   margin-top: 10px;
+   width: 100%;
+   padding: 10px;
+   background-color: #007bff;
+   color: white;
+   border-radius: 6px;
+   border: none;
+   cursor: pointer;
+   font-weight: bold;
+   transition: all 0.3s ease;
+ }
+
+ .search-btn:disabled {
+   background-color: #ccc;
+   cursor: not-allowed;
+ }
+
+ .search-btn:hover:not(:disabled) {
+   background-color: #0056b3;
+ }
+
+ /* Display Mode Button Styles */
+ .display-btn {
+   margin-top: 10px;
+   width: 100%;
+   padding: 10px;
+   background-color: #28a745;
+   color: white;
+   border-radius: 6px;
+   border: none;
+   cursor: pointer;
+   font-weight: bold;
+   transition: all 0.3s ease;
+   display: none; /* Hidden by default */
+ }
+
+ .display-btn:hover {
+   background-color: #1e7e34;
+ }
+
+ .display-btn:disabled {
+   background-color: #ccc;
+   cursor: not-allowed;
+ }
+
+ .button-container {
+   display: flex;
+   gap: 10px;
+   margin-top: 10px;
+ }
+
+ .button-container .search-btn,
+ .button-container .display-btn {
+   flex: 1;
+   margin-top: 0;
+ }
+
+ .dashboard-container {
+   display: none; /* hidden until sensors selected */
+   margin-top: 20px;
+ }
+
+ .section-label {
+   font-weight: 600;
+   margin-bottom: 5px;
+ }
+
+   .date-picker-container {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     background-color: var(--secondary-color);
+     padding: 10px;
+     border-radius: 4px;
+     margin-bottom: 15px;
+   }
+   
+   .date-btn {
+     background-color: white;
+     border: 1px solid var(--border-color);
+     padding: 5px 10px;
+     border-radius: 4px;
+   }
+   
+   .date-btn svg {
+     margin-right: 5px;
+     color: var(--primary-color);
+   }
+   
+   .dashboard-container {
+     background-color: white;
+     border-radius: 4px;
+     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+     padding: 15px;
+     margin-bottom: 15px;
+   }
+   
+   .chart-container {
+     border: 1px solid var(--border-color);
+     border-radius: 4px;
+     overflow: hidden;
+     margin-bottom: 10px;
+   }
+   
+   .parameter-selector {
+     width: 100%;
+     padding: 8px;
+     border: 1px solid var(--border-color);
+     border-radius: 4px;
+     margin-bottom: 10px;
+   }
+   
+   .search-btn {
+     background-color: var(--primary-color);
+     color: white;
+     border: none;
+     border-radius: 4px;
+     padding: 8px 20px;
+     cursor: pointer;
+     transition: background-color 0.3s ease;
+   }
+   
+   .search-btn:hover {
+     background-color: #1f8a7a;
+   }
+   
+   .search-btn:disabled {
+     background-color: #ccc;
+     cursor: not-allowed;
+   }
+   
+   .settings-icon {
+     color: #999;
+     cursor: pointer;
+     font-size: 20px;
+     margin-left: 10px;
+   }
+   
+   .footer-stats {
+     display: flex;
+     justify-content: space-around;
+     background-color: var(--secondary-color);
+     padding: 10px;
+     border-radius: 4px;
+     margin-top: 20px;
+   }
+   
+   .footer-item {
+     display: flex;
+     align-items: center;
+     font-size: 14px;
+   }
+   
+   .footer-item i {
+     margin-right: 5px;
+     color: var(--primary-color);
+   }
+   
+   .chart-visibility {
+     background-color: var(--primary-color);
+     color: white;
+     padding: 10px;
+     margin-top: 15px;
+     border-radius: 4px 4px 0 0;
+   }
+   
+   .chart-options {
+     background-color: white;
+     border: 1px solid var(--border-color);
+     border-radius: 0 0 4px 4px;
+     padding: 10px;
+   }
+   
+   .toggle-switch {
+     display: inline-block;
+     position: relative;
+     width: 50px;
+     height: 24px;
+   }
+   
+   .toggle-switch input {
+     opacity: 0;
+     width: 0;
+     height: 0;
+   }
+   
+   .slider {
+     position: absolute;
+     cursor: pointer;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: #ccc;
+     transition: .4s;
+     border-radius: 24px;
+   }
+   
+   .slider:before {
+     position: absolute;
+     content: "";
+     height: 16px;
+     width: 16px;
+     left: 4px;
+     bottom: 4px;
+     background-color: white;
+     transition: .4s;
+     border-radius: 50%;
+   }
+   
+   input:checked + .slider {
+     background-color: var(--primary-color);
+   }
+   
+   input:checked + .slider:before {
+     transform: translateX(26px);
+   }
+   
+   .option-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 5px 0;
+     border-bottom: 1px solid var(--border-color);
+   }
+   
+   .sonogram {
+     width: 100%;
+     height: 180px;
+     background: linear-gradient(to bottom, 
+       #420d0d 0%, #911515 10%, 
+       #c7a10a 20%, #56a81c 40%, 
+       #0f7a2c 60%, #083d63 80%, 
+       #010b29 100%
+     );
+     position: relative;
+     overflow: hidden;
+   }
+   
+   .sonogram:after {
+     content: "";
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: repeating-linear-gradient(
+       90deg,
+       rgba(0,255,0,0.1),
+       rgba(0,255,0,0.1) 2px,
+       transparent 2px,
+       transparent 10px
+     );
+   }
+   
+   .frequency-chart {
+     width: 100%;
+     height: 250px;
+     background-color: #f9f9f9;
+     position: relative;
+   }
+   
+   .spectogram-chart{
+     width: 100%;
+     height: 250px;
+     background-color: #f9f9f9;
+     position: relative;
+   }
+
+   .chart-bar {
+     position: absolute;
+     bottom: 0;
+     background-color: #2196F3;
+     width: 20px;
+     margin: 0 2px;
+   }
+
+   .control-row {
+     display: flex;
+     align-items: center;
+     gap: 15px;
+     flex-wrap: wrap;
+     margin-bottom: 15px;
+   }
+
+   .control-group {
+     display: flex;
+     flex-direction: column;
+     gap: 5px;
+   }
+
+   .control-group label {
+     font-weight: 500;
+     font-size: 14px;
+     color: var(--tab-text);
+   }
+  </style>
+</head>
+<body>
+  <div class="container-fluid py-3">
+    <div class="row mb-3">
+        <div class="col-6">
+          <h2 class="mb-0" style="color: #26a69a;">Monitorização ao Vivo</h2>
+        </div>
+        <div class="col-6 text-end">
+          <a href="/" class="btn btn-primary">← Voltar para Home</a>
+        </div>
+      </div>
+    <div class="live-controls">
+          <label class="section-label">Métrica:</label>
+          <select id="parametroSelect" class="parameter-selector">
+            <option value="four_metrics">LAeq,LCpeak,LAFmax,LAFmin</option>
+            <option>LAEA</option>
+            <option>LAeq</option>
+            <option>LCpeak</option>
+            <option>LAmin</option>
+            <option>LAmax</option>
+          </select>
+        </div>
+        
+        <div class="sensor-selection-container">
+          <label class="section-label">Selecionar Sensores:</label>
+          
+          <div class="sensor-dropdown" id="sensor-dropdown">
+            <div class="sensor-dropdown-toggle" tabindex="0" onclick="toggleDropdown()">
+              <span id="dropdown-text">Escolher sensores...</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="sensor-dropdown-menu" id="dropdown-menu" style="display: none;">
+              <div class="sensor-dropdown-item">
+                <input type="checkbox" id="sensor-1" value="1" onchange="handleSensorChange(this)">
+                <label for="sensor-1">Sensor 1</label>
+              </div>
+              <div class="sensor-dropdown-item">
+                <input type="checkbox" id="sensor-2" value="2" onchange="handleSensorChange(this)">
+                <label for="sensor-2">Sensor 2</label>
+              </div>
+              <div class="sensor-dropdown-item">
+                <input type="checkbox" id="sensor-3" value="3" onchange="handleSensorChange(this)">
+                <label for="sensor-3">Sensor 3</label>
+              </div>
+              <div class="sensor-dropdown-item">
+                <input type="checkbox" id="sensor-4" value="4" onchange="handleSensorChange(this)">
+                <label for="sensor-4">Sensor 4</label>
+              </div>
+            </div>
+          </div>
+
+          <label class="section-label">Intervalo:</label>
+          <select id="timeRangeSelect">
+            <option value="5m" selected>5 minutos</option>
+            <option value="1h">1 hora</option>
+            <option value="1d">1 dia</option>
+            <option value="1w">1 semana</option>
+            <option value="1mo">1 mês</option>
+          </select>
+        
+          <div class="button-container">
+            <button class="search-btn" onclick="atualizarIframe()" id="search-btn" disabled>
+              Pesquisar
+            </button>
+            <button class="display-btn" onclick="openDisplayMode()" id="display-btn">
+              📺 Modo de Apresentação
+            </button>
+          </div>
+        
+          <div class="dashboard-container" id="dashboard-container">
+            <div class="chart-container">
+              <iframe id="liveChart" src="" width="100%" height="250" frameborder="0"></iframe>
+            </div>
+            <div class="mt-3 mb-3">
+              <div class="p-1 bg-light">Frequência</div>
+              <iframe src="http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=1745230740651&to=1747822740651&timezone=browser&refresh=5s&panelId=1&__feature.dashboardSceneSolo" width="100%" height="250" frameborder="0"></iframe>
+              <div class="text-center pt-1">Hz</div>
+          
+              <div class="mt-3 mb-3">
+                <div class="p-1 bg-light">Espectrograma</div>
+                <iframe id="spectogram-chart" src="" width="100%" height="250" frameborder="0"></iframe>
+              </div>
+              <div class="mt-3 mb-3">
+                <div class="p-1 bg-light">Eventos Sonoros</div>
+                <iframe id="soundEvents-chart" src="" width="100%" height="250" frameborder="0"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+    const selectedSensors = new Set();
+
+    function toggleDropdown() {
+      const dropdown = document.getElementById('sensor-dropdown');
+      const menu = document.getElementById('dropdown-menu');
+      dropdown.classList.toggle('open');
+      menu.style.display = dropdown.classList.contains('open') ? 'block' : 'none';
+    }
+
+    function handleSensorChange(checkbox) {
+      const sensorId = checkbox.value;
+      
+      // Removed the logic that unchecks other checkboxes to allow multiple selections
+      if (checkbox.checked) {
+        selectedSensors.add(sensorId);
+      } else {
+        selectedSensors.delete(sensorId);
+      }
+      
+      updateDropdownText();
+      updateButtons();
+    }
+
+    function updateDropdownText() {
+      const dropdownText = document.getElementById('dropdown-text');
+      const count = selectedSensors.size;
+
+      if (count === 0) {
+        dropdownText.textContent = 'Escolher sensores...';
+      } else if (count === 1) {
+        const [id] = [...selectedSensors];
+        dropdownText.innerHTML = `Sensor ${id} <span class="selection-count">1</span>`;
+      } else {
+        dropdownText.innerHTML = `${count} sensores selecionados <span class="selection-count">${count}</span>`;
+      }
+    }
+
+    function updateButtons() {
+      const searchBtn = document.getElementById('search-btn');
+      const displayBtn = document.getElementById('display-btn');
+      const metricSelect = document.getElementById('parametroSelect');
+      
+      const count = selectedSensors.size;
+      const metric = metricSelect.value;
+
+      // Caso métrica seja "four_metrics" e mais de 1 sensor, desabilitar botão e mostrar aviso
+      if (metric === "four_metrics" && count > 1) {
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Só podes escolher 1 sensor para esta métrica";
+      } else if (count > 0) {
+        searchBtn.disabled = false;
+        searchBtn.textContent = "Pesquisar";
+      } else {
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Selecionar pelo menos um sensor";
+      }
+
+      // Display Mode só para 1 sensor, independente da métrica
+      if (count === 1) {
+        displayBtn.style.display = "block";
+      } else {
+        displayBtn.style.display = "none";
+      }
+    }
+
+
+    function openDisplayMode() {
+      if (selectedSensors.size !== 1) {
+        alert("Por favor, selecione exatamente um sensor para o Modo de Apresentação.");
+        return;
+      }
+
+      const sensorId = [...selectedSensors][0];
+      const parameter = document.getElementById('parametroSelect').value;
+      const interval = document.getElementById('timeRangeSelect').value;
+      
+      // Criar form oculto
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/display-mode';
+      form.target = '_blank';
+      
+      // Adicionar campos
+      const fields = {
+        sensor: sensorId,
+        parameter: parameter,
+        interval: interval
+      };
+      
+      Object.keys(fields).forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      });
+      
+      // Adicionar ao DOM, submeter e remover
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    }
+
+    async function atualizarIframe() {
+      
+      if (selectedSensors.size === 0) {
+        alert("Por favor, selecione pelo menos um sensor.");
+        return;
+      }
+
+      const dashboardContainer = document.getElementById('dashboard-container');
+      dashboardContainer.style.display = 'block';
+
+      // Mostrar/esconder gráficos conforme número de sensores
+      const chartContainers = dashboardContainer.querySelectorAll('.chart-container, .mt-3.mb-3');
+      // chartContainers[0] é o primeiro gráfico (liveChart)
+      // chartContainers[1] é a div do Frequency
+      // chartContainers[2] é a div do Spectogram
+
+      if (selectedSensors.size === 1) {
+        // Mostrar todos os 3 gráficos
+        chartContainers.forEach(el => el.style.display = 'block');
+      } else {
+        // Mostrar apenas o primeiro gráfico
+        chartContainers[0].style.display = 'block'; // This is the liveChart
+        if (chartContainers.length > 1) { // Ensure there are other elements to hide
+          chartContainers[1].style.display = 'none'; // Hide Frequency
+          chartContainers[2].style.display = 'none'; // Hide Spectogram
+          chartContainers[3].style.display = 'none';//Hide Sound Events
+        }
+      }
+
+      document.getElementById('dashboard-container').style.display = 'block';
+
+      // ✅ CORREÇÃO: Remover encodeURIComponent dos sensores
+      const sensores = Array.from(selectedSensors).join(',');
+      const interval = document.getElementById('timeRangeSelect').value;
+      const parametro = document.getElementById('parametroSelect').value;
+      const get_time_parameter = 'LAEA'
+
+      const now = Date.now();
+    let from;
+    switch (interval) {
+        case '1h':  from = now - 60 * 60 * 1000; break;
+        case '1d':  from = now - 24 * 60 * 60 * 1000; break;
+        case '1w':  from = now - 7 * 24 * 60 * 60 * 1000; break;
+        case '1mo': from = now - 30 * 24 * 60 * 60 * 1000; break;
+        case '5m':
+        default:    from = now - 5 * 60 * 1000;
+    }
+
+    const baseUrls = {
+        four_metrics: "http://localhost:3000/d-solo/cerw46cubqbk0b/4-metrcis",
+        LAEA:    "http://localhost:3000/d-solo/eej0pdkup3rpce/laea",
+        LAeq:    "http://localhost:3000/d-solo/dej0r21ki3ri8e/laeq",
+        LCpeak:  "http://localhost:3000/d-solo/fej0qrt2av8qod/lcpeak",
+        LAmin:   "http://localhost:3000/d-solo/eej2n5j54d1c0a/lafmin",
+        LAmax:   "http://localhost:3000/d-solo/eej0qhnp8j5s0b/lafmax",
+        LCpeakT: "http://localhost:3000/d-solo/bej0rd0dtua68d/lcpeakt",
+        LAmaxT:  "http://localhost:3000/d-solo/fej2mx82t08hsc/lafmaxt",
+        LAminT:  "http://localhost:3000/d-solo/eej2nbqw1xm9sf/lafmint"
+    };
+
+    const selectedUrl = baseUrls[parametro] || baseUrls['LAEA'];
+        
+    // ✅ CORREÇÃO PRINCIPAL: Não usar encodeURIComponent para var-sensors
+    const iframeUrl = `${selectedUrl}?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`;
+    const spectogramURL = `http://localhost:3000/d-solo/een6a6zegi1hca/spectogram?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`
+    const soundEventsURL = `http://localhost:3000/d-solo/berex2ov2g934d/events-espectogram?orgId=1&from=${from}&to=now&timezone=browser&panelId=1&__feature.dashboardSceneSolo`
+    // 🔍 DEBUG: Logs para verificar os valores
+    console.log("Sensores selecionados:", selectedSensors);
+    console.log("Sensores formatados:", sensores);
+    console.log("Parâmetro:", parametro);
+    console.log("URL completo:", iframeUrl);
+    console.log("Timestamp from:", new Date(from).toISOString());
+    console.log("Timestamp to:", new Date(now).toISOString());
+        
+    document.getElementById('liveChart').src = iframeUrl;
+    document.getElementById('spectogram-chart').src = spectogramURL;
+    document.getElementById('soundEvents-chart').src = soundEventsURL;
+    }
+
+    // Initialize button states on page load
+    updateButtons();
+
+    document.getElementById('parametroSelect').addEventListener('change', () => {
+      updateButtons();
+    });
+
+    window.addEventListener('load', () => {
+  // Select sensor 1
+  const sensor1Checkbox = document.getElementById('sensor-1');
+  const dropdownText = document.getElementById('dropdown-text');
+  dropdownText.innerHTML = `Sensor 1 <span class="selection-count">1</span>`;
+  dropdownText
+  if (sensor1Checkbox) {
+    sensor1Checkbox.checked = true;
+    selectedSensors.add('1');
+  }
+
+  // Update UI and buttons
+  //updateDropdownText();
+  updateButtons();
+
+  // Automatically trigger fetch
+  atualizarIframe(new Event('submit'));
+});
+  </script>
+</body>
+</html>
