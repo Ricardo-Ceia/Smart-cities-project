@@ -857,7 +857,7 @@ async function fetchDataAndCompute(event) {
         <tr><td>LAFmaxT</td><td>${isNaN(getMax(lafmaxTValues)) ? 'Sem dados' : getMax(lafmaxTValues).toFixed(1)} dB</td></tr>
         <tr><td>LCpeakT</td><td>${isNaN(getMax(lcpeakTValues)) ? 'Sem dados' : getMax(lcpeakTValues).toFixed(1)} dB</td></tr>
         <tr><td>LA50</td><td>${isNaN(computePercentile(laeaValues,50)) ? 'Sem dados' : computePercentile(laeaValues,50).toFixed(1)} dB</td></tr>
-        <tr><td>LA95</td><td>${isNaN(computePercentile(laeaValues,95)) ? 'Sem dados' : computePercentile(laeaValues,95).toFixed(1)} dB</td></tr>
+        <tr><td>LA90</td><td>${isNaN(computePercentile(laeaValues,10)) ? 'Sem dados' : computePercentile(laeaValues,10).toFixed(1)} dB</td></tr>
         <tr><td>Lday</td><td>${isNaN(Lday) ? 'Sem dados' : Lday.toFixed(1)} dB</td></tr>
         <tr><td>Levening</td><td>${isNaN(Levening) ? 'Sem dados' : Levening.toFixed(1)} dB</td></tr>
         <tr><td>Lnight</td><td>${isNaN(Lnight) ? 'Sem dados' : Lnight.toFixed(1)} dB</td></tr>

@@ -160,161 +160,100 @@ def get_lden_data():
 def events():
     return render_template("events.html")
 
+
 @app.route('/api/sensor-events', methods=['POST'])
-def get_sensor_events():
-    """
-    Rota para obter eventos de sensores num período específico.
-    
-    Payload esperado:
-    {
-        "sensor_id": "string",
-        "start_date": "2025-07-17T00:00:00Z",
-        "end_date": "2025-07-18T23:59:59Z"
-    }
-    """
-    try:
-        data = request.get_json()
-        sensor_id = data.get('sensor_id')
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
-        print(f"data:{data}")
-        if not all([sensor_id, start_date, end_date]):
-            return jsonify({"error": "sensor_id, start_date e end_date são obrigatórios"}), 400
-        
-        # Buscar dados da base de dados
-        events_data = fetch_sensor_events(sensor_id, start_date, end_date)
-        #print(f"events_data:{events_data}")
-        # Agrupar eventos contínuos
-        grouped_events = group_continuous_events(events_data)
-        
-        return jsonify(grouped_events)
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def api_sensor_events():
+    data = request.json
+    start = int(data["start_date"])
+    end = int(data["end_date"])
+    start = datetime.utcfromtimestamp(start / 1000).isoformat()+'Z'
+    end = datetime.utcfromtimestamp(end / 1000).isoformat()+'Z'
+    print(f"start{start},stopt:{end}")
+    client = InfluxDBClient(
+        url=INFLUXDB_URL,
+        token=INFLUXDB_TOKEN,
+        org=INFLUXDB_ORG,
+        timeout=60000
+    )
 
-def fetch_sensor_events(sensor_id: str, start_date: str, end_date: str) -> List[Dict]:
-    """
-    Busca eventos da base de dados onde EventDetect = 1 usando Flux.
-    """
-    # Query Flux para buscar eventos
-    flux_query = f'''
-                    from(bucket: "{INFLUXDB_BUCKET}")
-                    |> range(start: {start_date}, stop: {end_date})
-                    |> filter(fn: (r) => r["_measurement"] == "sound_level")
-                    |> filter(fn: (r) => r["_field"] == "sensor_id" or
-                                        r["_field"] == "EventDetect" or 
-                                        r["_field"] == "EventType1" or 
-                                        r["_field"] == "EventType2" or 
-                                        r["_field"] == "EventType3" or 
-                                        r["_field"] == "EventType4" or 
-                                        r["_field"] == "EventType5" or 
-                                        r["_field"] == "EventType6" or 
-                                        r["_field"] == "EventType7" or 
-                                        r["_field"] == "EventType8" or 
-                                        r["_field"] == "EventType9" or 
-                                        r["_field"] == "EventType10" or 
-                                        r["_field"] == "LCpeak")
-                    |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-                    |> filter(fn: (r) => r["EventDetect"] == 1.0)
-                    |> filter(fn: (r) => r["sensor_id"] == "{sensor_id}")
-                    |> sort(columns: ["_time"])
-                '''
-    
-    # Conectar ao InfluxDB
-    client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
     query_api = client.query_api()
-    
-    try:
-        # Executar query
-        result = query_api.query(flux_query)
-        # Processar resultados
-        events_by_time = {}
-        
-        for table in result:
-            for record in table.records:
-                values = record.values
-                time_key = values.get('_time').isoformat()
 
-                events_by_time[time_key] = {
-                    'time': time_key,
-                    'EventDetect': values.get('EventDetect', 0),
-                    'EventType1': values.get('EventType1', 0),
-                    'EventType2': values.get('EventType2', 0),
-                    'EventType3': values.get('EventType3', 0),
-                    'EventType4': values.get('EventType4', 0),
-                    'EventType5': values.get('EventType5', 0),
-                    'EventType6': values.get('EventType6', 0),
-                    'EventType7': values.get('EventType7', 0),
-                    'EventType8': values.get('EventType8', 0),
-                    'EventType9': values.get('EventType9', 0),
-                    'EventType10': values.get('EventType10', 0),
-                    'LCpeak': values.get('LCpeak', 0)
-                }
-        # Converter para lista ordenada por tempo
-        events = list(events_by_time.values())
-        #print(f"events{events}")
-        events.sort(key=lambda x: x['time'])
-        
-        return events
-        
-    finally:
-        client.close()
-
-def group_continuous_events(events_data: List[Dict]) -> List[Dict]:
-    """
-    Agrupa eventos contínuos em períodos.
-    """
-    if not events_data:
-        return []
-    
-    grouped_events = []
-    current_event = None
-    
-    for event in events_data:
-        event_time = datetime.fromisoformat(event['time'].replace('Z', '+00:00'))
-        
-        # Coletar valores dos EventTypes
-        event_types = {}
-        for i in range(1, 11):  # EventType1 a EventType10
-            event_types[f'EventType{i}'] = event.get(f'EventType{i}', 0)
-        
-        if current_event is None:
-            # Início de um novo evento
-            current_event = {
-                "start_time": event['time'],
-                "end_time": event['time'],
-                "event_types": [event_types],
-                "lcpeak_values": [event.get('LCpeak', 0)]
-            }
-        else:
-            # Verificar se é continuação do evento atual
-            prev_time = datetime.fromisoformat(current_event['end_time'].replace('Z', '+00:00'))
-            time_diff = (event_time - prev_time).total_seconds() * 1000
-            
-            if time_diff <= 200:  # Gap máximo de 200ms para considerar o mesmo evento
-                # Continuar evento atual
-                current_event['end_time'] = event['time']
-                current_event['event_types'].append(event_types)
-                current_event['lcpeak_values'].append(event.get('LCpeak', 0))
-            else:
-                # Finalizar evento atual e começar novo
-                grouped_events.append(current_event)
-                
-                # Começar novo evento
-                current_event = {
-                    "start_time": event['time'],
-                    "end_time": event['time'],
-                    "event_types": [event_types],
-                    "lcpeak_values": [event.get('LCpeak', 0)]
-                }
-    
-    # Adicionar último evento se existir
-    if current_event:
-        grouped_events.append(current_event)
-    
-    return grouped_events
+    query = f'''
+    from(bucket: "{INFLUXDB_BUCKET}")
+    |> range(start: {start}, stop: {end})
+    |> filter(fn: (r) =>
+        r._measurement == "sound_level" and
+        (r._field == "EventDetect" or r._field == "LCpeak" or
+        r._field == "EventType1" or r._field == "EventType2" or r._field == "EventType3" or
+        r._field == "EventType4" or r._field == "EventType5" or r._field == "EventType6" or
+        r._field == "EventType7" or r._field == "EventType8" or r._field == "EventType9" or
+        r._field == "EventType10")
+    )
+    |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+    |> keep(columns: ["_time", "EventDetect", "LCpeak", "EventType1", "EventType2", "EventType3", "EventType4", "EventType5", "EventType6", "EventType7", "EventType8", "EventType9", "EventType10"])
+    |> sort(columns: ["_time"])
+    '''
 
 
+    tables = query_api.query(query)
+    print(f"tables:{tables}")
+    rows = []
+
+    for table in tables:
+        for record in table.records:
+            r = record.values
+            rows.append({
+                "timestamp": r["_time"],
+                "EventDetect": int(r.get("EventDetect", 0)),
+                "LCpeak": float(r.get("LCpeak", 0)),
+                **{f"EventType{i}": float(r.get(f"EventType{i}", 0)) for i in range(1, 11)}
+            })
+
+
+    # Agrupamento por eventos contínuos com EventDetect == 10
+    eventos = []
+    evento_atual = []
+
+    for row in rows:
+        if row["EventDetect"] == 10:
+            evento_atual.append(row)
+        elif evento_atual:
+            eventos.append(evento_atual)
+            evento_atual = []
+    if evento_atual:
+        eventos.append(evento_atual)
+
+    resultado = []
+
+    for evento in eventos:
+        start_time = evento[0]["timestamp"]
+        end_time = evento[-1]["timestamp"]
+        duration = (end_time - start_time).total_seconds()
+        max_lcpeak = max(evento, key=lambda x: x["LCpeak"])["LCpeak"]
+
+        # Calcular a média de cada EventType
+        event_type_means = {}
+        for i in range(1, 11):
+            key = f"EventType{i}"
+            values = [row.get(key, 0.0) for row in evento]
+            avg_value = sum(values) / len(values) if values else 0.0
+            event_type_means[key] = avg_value
+
+        # Determinar o EventType com maior média
+        event_type_max, event_type_max_value = max(event_type_means.items(), key=lambda x: x[1])
+
+        resultado.append({
+            "inicio": start_time.isoformat(),
+            "fim": end_time.isoformat(),
+            "duracao_segundos": duration,
+            "max_lcpeak": max_lcpeak,
+            "event_type_max": event_type_max,
+            "event_type_max_value": event_type_max_value
+        })
+
+
+    print(f"resultado: {resultado}")
+    return jsonify(resultado)
 
 @app.route('/')
 def home():

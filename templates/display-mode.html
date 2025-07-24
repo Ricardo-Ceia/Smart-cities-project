@@ -260,22 +260,22 @@
 
     <div class="charts-grid">
       <div class="chart-section">
-        <div class="chart-title" id="main-chart-title">{{ parameter }} - Sensor {{ sensor }}</div>
+        <!--<div class="chart-title" id="main-chart-title">{{ parameter }} - Sensor {{ sensor }}</div>-->
         <iframe id="main-chart" class="chart-frame"></iframe>
       </div>
 
       <div class="chart-section" id="frequency-section">
-        <div class="chart-title">Análise de Frequência</div>
+        <!--<div class="chart-title">Análise de Frequência</div>-->
         <iframe id="frequency-chart" class="chart-frame frequency-chart-frame"></iframe>
       </div>
 
       <div class="chart-section" id="spectogram-section">
-        <div class="chart-title">Espectrograma</div>
+        <!--<div class="chart-title">Espectrograma</div>-->
         <iframe id="spectogram-chart" class="chart-frame spectogram-chart-frame"></iframe>
       </div>
 
       <div class="gauges-section">
-        <div class="chart-title">Sound Level Gauges</div>
+        <!--<div class="chart-title">Sound Level Gauges</div>-->
         <div class="gauges-grid">
           <iframe id="laeq-gauge" class="gauge-frame"></iframe>
           <iframe id="lamax-gauge" class="gauge-frame"></iframe>
@@ -364,12 +364,14 @@
 
       const selectedUrl = baseUrls[currentParameter] || baseUrls['LAEA'];
       const iframe = document.getElementById('main-chart');
-      iframe.src = `${selectedUrl}?orgId=1&from=${from}&to=${to}&timezone=browser&var-sensors=${currentSensor}&panelId=1&__feature.dashboardSceneSolo&theme=dark`;
+      iframe.src = `${selectedUrl}?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${currentSensor}&panelId=1&__feature.dashboardSceneSolo&theme=dark`;
     }
 
     async function loadFrequencyChart() {
       const iframe = document.getElementById('frequency-chart');
-      iframe.src = "http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=1745230740651&to=1747822740651&timezone=browser&panelId=1&__feature.dashboardSceneSolo&theme=dark";
+      const now = Date.now();
+      const from = calculateFromTime(now, currentInterval);
+      iframe.src = `http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${currentSensor}&panelId=1&__feature.dashboardSceneSolo`;
     }
 
     async function loadSpectogramChart() {
@@ -377,7 +379,7 @@
       const now = Date.now();
       const from = calculateFromTime(now, currentInterval);
       const iframe = document.getElementById('spectogram-chart');
-      iframe.src = `${baseUrl}?orgId=1&from=${from}&to=${now}&timezone=browser&var-sensors=${currentSensor}&panelId=1&__feature.dashboardSceneSolo&theme=dark`;
+      iframe.src = `${baseUrl}?orgId=1&from=${from}&to=now&timezone=browser&var-sensors=${currentSensor}&panelId=1&__feature.dashboardSceneSolo&theme=dark`;
     }
 
     async function loadGauges(from, to) {
