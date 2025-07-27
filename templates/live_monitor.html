@@ -227,7 +227,7 @@
  }
 
  .dashboard-container {
-   display: none; /* hidden until sensors selected */
+   display: none; /* hidden until estações de monitorização selected */
    margin-top: 20px;
  }
 
@@ -490,29 +490,29 @@
         </div>
         
         <div class="sensor-selection-container">
-          <label class="section-label">Selecionar Sensores:</label>
+          <label class="section-label">Selecionar Estação de Monitorização:</label>
           
           <div class="sensor-dropdown" id="sensor-dropdown">
             <div class="sensor-dropdown-toggle" tabindex="0" onclick="toggleDropdown()">
-              <span id="dropdown-text">Escolher sensores...</span>
+              <span id="dropdown-text">Escolher estação de monitorização...</span>
               <span class="dropdown-arrow">▼</span>
             </div>
             <div class="sensor-dropdown-menu" id="dropdown-menu" style="display: none;">
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-1" value="1" onchange="handleSensorChange(this)">
-                <label for="sensor-1">Sensor 1</label>
+                <label for="sensor-1">Estação de Monitorização 1</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-2" value="2" onchange="handleSensorChange(this)">
-                <label for="sensor-2">Sensor 2</label>
+                <label for="sensor-2">Estação de Monitorização 2</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-3" value="3" onchange="handleSensorChange(this)">
-                <label for="sensor-3">Sensor 3</label>
+                <label for="sensor-3">Estação de Monitorização 3</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-4" value="4" onchange="handleSensorChange(this)">
-                <label for="sensor-4">Sensor 4</label>
+                <label for="sensor-4">Estação de Monitorização 4</label>
               </div>
             </div>
           </div>
@@ -585,12 +585,12 @@
       const count = selectedSensors.size;
 
       if (count === 0) {
-        dropdownText.textContent = 'Escolher sensores...';
+        dropdownText.textContent = 'Escolher estações de monitorização...';
       } else if (count === 1) {
         const [id] = [...selectedSensors];
-        dropdownText.innerHTML = `Sensor ${id} <span class="selection-count">1</span>`;
+        dropdownText.innerHTML = `Estação de Monitorização ${id} <span class="selection-count">1</span>`;
       } else {
-        dropdownText.innerHTML = `${count} sensores selecionados <span class="selection-count">${count}</span>`;
+        dropdownText.innerHTML = `${count} estações de monitorização selecionadas <span class="selection-count">${count}</span>`;
       }
     }
 
@@ -605,13 +605,13 @@
       // Caso métrica seja "four_metrics" e mais de 1 sensor, desabilitar botão e mostrar aviso
       if (metric === "four_metrics" && count > 1) {
         searchBtn.disabled = true;
-        searchBtn.textContent = "Só podes escolher 1 sensor para esta métrica";
+        searchBtn.textContent = "Só pode escolher 1 estação de monitorização para esta métrica";
       } else if (count > 0) {
         searchBtn.disabled = false;
         searchBtn.textContent = "Pesquisar";
       } else {
         searchBtn.disabled = true;
-        searchBtn.textContent = "Selecionar pelo menos um sensor";
+        searchBtn.textContent = "Selecionar pelo menos uma estação de monitorização";
       }
 
       // Display Mode só para 1 sensor, independente da métrica
@@ -625,7 +625,7 @@
 
     function openDisplayMode() {
       if (selectedSensors.size !== 1) {
-        alert("Por favor, selecione exatamente um sensor para o Modo de Apresentação.");
+        alert("Por favor, selecione exatamente uma estação de monitorização para o Modo de Apresentação.");
         return;
       }
 
@@ -663,14 +663,14 @@
     async function atualizarIframe() {
       
       if (selectedSensors.size === 0) {
-        alert("Por favor, selecione pelo menos um sensor.");
+        alert("Por favor, selecione pelo menos uma estação de monitorização.");
         return;
       }
 
       const dashboardContainer = document.getElementById('dashboard-container');
       dashboardContainer.style.display = 'block';
 
-      // Mostrar/esconder gráficos conforme número de sensores
+      // Mostrar/esconder gráficos conforme número de estações de monitorização
       const chartContainers = dashboardContainer.querySelectorAll('.chart-container, .mt-3.mb-3');
       // chartContainers[0] é o primeiro gráfico (liveChart)
       // chartContainers[1] é a div do Frequency
@@ -691,8 +691,8 @@
 
       document.getElementById('dashboard-container').style.display = 'block';
 
-      // ✅ CORREÇÃO: Remover encodeURIComponent dos sensores
-      const sensores = Array.from(selectedSensors).join(',');
+      // ✅ CORREÇÃO: Remover encodeURIComponent das estações de monitorização
+      const estacoesMonitorizacao = Array.from(selectedSensors).join(',');
       const interval = document.getElementById('timeRangeSelect').value;
       const parametro = document.getElementById('parametroSelect').value;
       const get_time_parameter = 'LAEA'
@@ -721,13 +721,13 @@
     const selectedUrl = baseUrls[parametro] || baseUrls['LAEA'];
         
     // ✅ CORREÇÃO PRINCIPAL: Não usar encodeURIComponent para var-sensors
-    const iframeUrl = `${selectedUrl}?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`;
-    const frequencyChartURL = `http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`;
-    const spectogramURL = `http://localhost:3000/d-solo/een6a6zegi1hca/spectogram?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`
+    const iframeUrl = `${selectedUrl}?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`;
+    const frequencyChartURL = `http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`;
+    const spectogramURL = `http://localhost:3000/d-solo/een6a6zegi1hca/spectogram?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`
     const soundEventsURL = `http://localhost:3000/d-solo/berex2ov2g934d/events-espectogram?orgId=1&from=${from}&to=now&timezone=browser&panelId=1&__feature.dashboardSceneSolo`
     // 🔍 DEBUG: Logs para verificar os valores
-    console.log("Sensores selecionados:", selectedSensors);
-    console.log("Sensores formatados:", sensores);
+    console.log("Estações de monitorização selecionadas:", selectedSensors);
+    console.log("Estações de monitorização formatadas:", estacoesMonitorizacao);
     console.log("Parâmetro:", parametro);
     console.log("URL completo:", iframeUrl);
     console.log("Timestamp from:", new Date(from).toISOString());
@@ -751,7 +751,7 @@
   // Select sensor 1
   const sensor1Checkbox = document.getElementById('sensor-1');
   const dropdownText = document.getElementById('dropdown-text');
-  dropdownText.innerHTML = `Sensor 1 <span class="selection-count">1</span>`;
+  dropdownText.innerHTML = `Estação de Monitorização 1 <span class="selection-count">1</span>`;
   dropdownText
   if (sensor1Checkbox) {
     sensor1Checkbox.checked = true;
