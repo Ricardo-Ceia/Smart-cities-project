@@ -277,13 +277,28 @@
                 if (data.length === 0) {
                     eventsList.innerHTML = `<div class="alert alert-warning">Nenhum evento encontrado nesse período.</div>`;
                 }
+
+                const eventTypeMap = {
+                    "EventType1": "Alarme",
+                    "EventType2": "Impacto",
+                    "EventType3": "Musica",
+                    "EventType4": "Gritos",
+                    "EventType5": "Respiração",
+                    "EventType6": "Conversas",
+                    "EventType7": "Telefone",
+                    "EventType8": "Liquidos",
+                    "EventType9": "Rodas",
+                    "EventType10": "Assobio"
+                };
     
                 data.forEach((event, index) => {
                     const start = new Date(event.inicio);
                     const end = new Date(event.fim);
 
-                    const maxLCpeak = typeof event.max_lcpeak === 'number' ? event.max_lcpeak.toFixed(2) : 'N/A';
-                    const eventType = event.event_type_max || 'N/A';
+                    const maxLCpeak = typeof event.max_lcpeak === 'number' ? event.max_lcpeak.toFixed(1) : 'N/A';
+                    const eventTypeKey = event.event_type_max || 'N/A';
+                    const eventTypeName = eventTypeMap[eventTypeKey] || eventTypeKey; 
+                    console.log(eventTypeName)
                     const eventTypeValue = typeof event.event_type_max_value === 'number' ? event.event_type_max_value.toFixed(2) : 'N/A';
 
                     const eventHTML = `
@@ -293,13 +308,13 @@
                                 <p>
                                     <strong>Início:</strong> ${start.toLocaleString()}<br>
                                     <strong>Fim:</strong> ${end.toLocaleString()}<br>
-                                    <strong>Duração:</strong> ${event.duracao_segundos.toFixed(2)} segundos
+                                    <strong>Duração:</strong> ${event.duracao_segundos.toFixed(1)} segundos
                                 </p>
                             </div>
                             <div class="event-details">
                                 <div class="event-types">
-                                    <h6>EventType dominante</h6>
-                                    <span class="event-type-badge">${eventType}: ${eventTypeValue}</span>
+                                    <h6>Tipo de evento dominante</h6>
+                                    <span class="event-type-badge">${eventTypeName}: ${eventTypeValue}</span>
                                 </div>
                                 <div class="lcpeak-values">
                                     <h6>LCpeak Máximo</h6>
