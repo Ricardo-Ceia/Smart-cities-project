@@ -226,7 +226,7 @@
  }
 
  .dashboard-container {
-   display: none; /* hidden until sensors selected */
+   display: none; /* hidden until estações de monitorização selected */
    margin-top: 20px;
  }
 
@@ -495,28 +495,28 @@
         </div>
 
         <div class="col-md-2">
-          <label class="form-label">Selecionar Sensores</label>
+          <label class="form-label">Selecionar Estação de Monitorização</label>
           <div class="sensor-dropdown" id="sensor-dropdown-interval">
             <div class="sensor-dropdown-toggle" tabindex="0" onclick="toggleDropdownInterval()">
-              <span id="dropdown-text-interval">Escolher sensores...</span>
+              <span id="dropdown-text-interval">Escolher estação de monitorização...</span>
               <span class="dropdown-arrow">▼</span>
             </div>
             <div class="sensor-dropdown-menu" id="dropdown-menu-interval" style="display: none;">
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-1-interval" value="1" onchange="handleSensorChangeInterval(this)">
-                <label for="sensor-1-interval">Sensor 1</label>
+                <label for="sensor-1-interval">Estação de Monitorização 1</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-2-interval" value="2" onchange="handleSensorChangeInterval(this)">
-                <label for="sensor-2-interval">Sensor 2</label>
+                <label for="sensor-2-interval">Estação de Monitorização 2</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-3-interval" value="3" onchange="handleSensorChangeInterval(this)">
-                <label for="sensor-3-interval">Sensor 3</label>
+                <label for="sensor-3-interval">Estação de Monitorização 3</label>
               </div>
               <div class="sensor-dropdown-item">
                 <input type="checkbox" id="sensor-4-interval" value="4" onchange="handleSensorChangeInterval(this)">
-                <label for="sensor-4-interval">Sensor 4</label>
+                <label for="sensor-4-interval">Estação de Monitorização 4</label>
               </div>
             </div>
           </div>
@@ -534,7 +534,7 @@
 
         <div class="col-md-2 d-flex align-items-end">
           <button type="button" class="btn btn-success w-100" onclick="fetchDataAndCompute(event)" id="search-btn-interval" disabled>
-            Selecionar sensores primeiro
+            Selecionar estação de monitorização primeiro
           </button>
         </div>
       </div>
@@ -609,12 +609,12 @@ function updateDropdownTextInterval() {
   const count = selectedSensorsInterval.size;
 
   if (count === 0) {
-    dropdownText.textContent = 'Escolher sensores...';
+    dropdownText.textContent = 'Escolher estação de monitorização...';
   } else if (count === 1) {
     const [id] = [...selectedSensorsInterval];
-    dropdownText.innerHTML = `Sensor ${id} <span class="selection-count">1</span>`;
+    dropdownText.innerHTML = `Estação de Monitorização ${id} <span class="selection-count">1</span>`;
   } else {
-    dropdownText.innerHTML = `${count} sensores selecionados <span class="selection-count">${count}</span>`;
+    dropdownText.innerHTML = `${count} estações de monitorização selecionadas <span class="selection-count">${count}</span>`;
   }
 }
 
@@ -625,10 +625,10 @@ function updateSearchButtonInterval() {
 
   if (numSensors === 0) {
     btn.disabled = true;
-    btn.textContent = 'Selecionar sensores primeiro';
+    btn.textContent = 'Selecionar estação de monitorização primeiro';
   } else if (variable === 'four_metrics' && numSensors !== 1) {
     btn.disabled = true;
-    btn.textContent = 'Só podes escolher 1 sensor para esta métrica';
+    btn.textContent = 'Só pode escolher 1 estação de monitorização para esta métrica';
   } else {
     btn.disabled = false;
     btn.textContent = 'Pesquisar';
@@ -679,7 +679,7 @@ async function fetchDataAndCompute(event) {
   event.preventDefault();
 
   if (selectedSensorsInterval.size === 0) {
-    alert("Por favor, selecione pelo menos um sensor.");
+    alert("Por favor, selecione pelo menos uma estação de monitorização.");
     return;
   }
 
@@ -687,7 +687,7 @@ async function fetchDataAndCompute(event) {
   const numSensors = selectedSensorsInterval.size;
 
   if (variable === 'four_metrics' && numSensors !== 1) {
-    alert("Só podes escolher 1 sensor para esta métrica.");
+    alert("Só pode escolher 1 estação de monitorização para esta métrica.");
     return;
   }
 
@@ -723,7 +723,7 @@ async function fetchDataAndCompute(event) {
     LAminT: `http://localhost:3000/d-solo/eej2nbqw1xm9sf/lafmint?orgId=1&from=${startDate}&to=${endDate}&timezone=browser&refresh=5s&var-sensors=${sensores}&panelId=1&__feature.dashboardSceneSolo`,
   };
 
-  console.log("Sensores selecionados:", sensores);
+  console.log("Estações de monitorização selecionadas:", sensores);
 
   infoMessage.style.display = 'none';
   spectogramContainer.style.display = 'block';
@@ -857,7 +857,7 @@ async function fetchDataAndCompute(event) {
         <tr><td>LAFmaxT</td><td>${isNaN(getMax(lafmaxTValues)) ? 'Sem dados' : getMax(lafmaxTValues).toFixed(1)} dB</td></tr>
         <tr><td>LCpeakT</td><td>${isNaN(getMax(lcpeakTValues)) ? 'Sem dados' : getMax(lcpeakTValues).toFixed(1)} dB</td></tr>
         <tr><td>LA50</td><td>${isNaN(computePercentile(laeaValues,50)) ? 'Sem dados' : computePercentile(laeaValues,50).toFixed(1)} dB</td></tr>
-        <tr><td>LA95</td><td>${isNaN(computePercentile(laeaValues,95)) ? 'Sem dados' : computePercentile(laeaValues,95).toFixed(1)} dB</td></tr>
+        <tr><td>LA90</td><td>${isNaN(computePercentile(laeaValues,10)) ? 'Sem dados' : computePercentile(laeaValues,10).toFixed(1)} dB</td></tr>
         <tr><td>Lday</td><td>${isNaN(Lday) ? 'Sem dados' : Lday.toFixed(1)} dB</td></tr>
         <tr><td>Levening</td><td>${isNaN(Levening) ? 'Sem dados' : Levening.toFixed(1)} dB</td></tr>
         <tr><td>Lnight</td><td>${isNaN(Lnight) ? 'Sem dados' : Lnight.toFixed(1)} dB</td></tr>

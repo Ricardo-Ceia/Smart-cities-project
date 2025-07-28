@@ -147,21 +147,18 @@
 <body>
     <section class="hero-section">
         <div class="container">
+            <a href="/" class="btn btn-outline-light btn-sm position-fixed top-0 end-0 m-3" style="border-radius: 30px;">
+                ← Voltar para Home
+            </a>
             <h1 class="display-4">Análise de Eventos Sonoros</h1>
-            <p class="lead">Explore eventos detectados por sensores num período específico</p>
+            <p class="lead">Explore eventos detectados por estações de monitorização num período específico</p>
         </div>
     </section>
 
     <div class="container mt-5">
-        <div class="row mb-3">
-            <div class="col-12 text-end">
-                <a href="/" class="btn btn-primary">← Voltar para Home</a>
-            </div>
-        </div>
-        
         <!-- Formulário de Pesquisa -->
         <div class="form-section">
-            <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Filtrar Eventos</h2>
+            <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Listar Eventos</h2>
             <form id="eventForm">
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -189,6 +186,11 @@
         <!-- Seção de Resultados -->
         <div class="results-section d-none" id="resultsSection">
             <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Eventos Detectados</h2>
+            <div class="d-flex justify-content-end mb-3">
+                <button id="downloadAllCSV" class="btn btn-outline-primary" style="border-radius: 30px;">
+                     Download CSV dos resultados
+                </button>
+            </div>
             
             <!-- Resumo -->
             <div class="alert alert-info" id="summaryAlert">
@@ -217,16 +219,20 @@
         </div>
     </div>
     <script>
+        // Variável global para armazenar os eventos
+        let data = [];
+    
         document.getElementById('eventForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-        
+    
             const sensorId = document.getElementById('sensorId').value.trim();
-            // Acrescentar 'Z' para dizer que é UTC, sem converter
-            const startDate = document.getElementById('startDate').value+":00.000Z";
-            const endDate = document.getElementById('endDate').value+":00.000Z";
-
-            console.log(startDate, endDate);  // enviar para backend no formato UTC correto
-        
+            const startDate = document.getElementById('startDate').value;
+            const newStartDate = new Date(startDate).getTime();
+            const endDate = document.getElementById('endDate').value;
+            const newEndDate = new Date(endDate).getTime();
+    
+            console.log(startDate, endDate);
+    
             const searchBtn = document.getElementById('searchBtn');
             const spinner = document.getElementById('loadingSpinner');
             const resultsSection = document.getElementById('resultsSection');
@@ -236,65 +242,50 @@
             const periodRange = document.getElementById('periodRange');
             const sensorIdResult = document.getElementById('sensorIdResult');
             const eventsList = document.getElementById('eventsList');
-        
+    
             // Reset UI
             resultsSection.classList.add('d-none');
             errorAlert.classList.add('d-none');
             spinner.classList.remove('d-none');
             searchBtn.disabled = true;
-        
+    
             try {
                 const response = await fetch('/api/sensor-events', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         sensor_id: sensorId,
-                        start_date: startDate,
-                        end_date: endDate
+                        start_date: newStartDate,
+                        end_date: newEndDate
                     })
                 });
-        
-                const data = await response.json();
-        
+    
+                data = await response.json();  // <- aqui armazenamos globalmente
+    
                 if (!response.ok) {
                     throw new Error(data.error || 'Erro ao buscar eventos');
                 }
-        
+    
                 // Atualizar resumo
                 totalEvents.textContent = data.length;
                 periodRange.textContent = `${startDate.slice(0, 10)} a ${endDate.slice(0, 10)}`;
                 sensorIdResult.textContent = sensorId;
-        
+    
                 // Limpar e preencher eventos
                 eventsList.innerHTML = '';
-        
+    
                 if (data.length === 0) {
                     eventsList.innerHTML = `<div class="alert alert-warning">Nenhum evento encontrado nesse período.</div>`;
                 }
-        
+    
                 data.forEach((event, index) => {
-                    const start = new Date(event.start_time);
-                    const end = new Date(event.end_time);
-                    const durationSeconds = ((end - start) / 1000).toFixed(2);
-        
-                    // Média dos EventTypes
-                    const averageTypes = {};
-                    event.event_types.forEach(types => {
-                        Object.entries(types).forEach(([key, val]) => {
-                            if (!averageTypes[key]) averageTypes[key] = [];
-                            averageTypes[key].push(val);
-                        });
-                    });
-                    const avgTypeValues = Object.entries(averageTypes).map(([key, values]) => {
-                        const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-                        return { key, avg };
-                    });
-                    const topEventType = avgTypeValues.sort((a, b) => b.avg - a.avg)[0];
-        
-                    // LCpeak máximo
-                    const maxLCpeak = Math.max(...event.lcpeak_values).toFixed(2);
-        
-                    // Renderização do card
+                    const start = new Date(event.inicio);
+                    const end = new Date(event.fim);
+
+                    const maxLCpeak = typeof event.max_lcpeak === 'number' ? event.max_lcpeak.toFixed(2) : 'N/A';
+                    const eventType = event.event_type_max || 'N/A';
+                    const eventTypeValue = typeof event.event_type_max_value === 'number' ? event.event_type_max_value.toFixed(2) : 'N/A';
+
                     const eventHTML = `
                         <div class="event-card">
                             <div class="event-header">
@@ -302,13 +293,13 @@
                                 <p>
                                     <strong>Início:</strong> ${start.toLocaleString()}<br>
                                     <strong>Fim:</strong> ${end.toLocaleString()}<br>
-                                    <strong>Duração:</strong> ${durationSeconds} segundos
+                                    <strong>Duração:</strong> ${event.duracao_segundos.toFixed(2)} segundos
                                 </p>
                             </div>
                             <div class="event-details">
                                 <div class="event-types">
                                     <h6>EventType dominante</h6>
-                                    <span class="event-type-badge">${topEventType.key}: ${topEventType.avg.toFixed(2)}</span>
+                                    <span class="event-type-badge">${eventType}: ${eventTypeValue}</span>
                                 </div>
                                 <div class="lcpeak-values">
                                     <h6>LCpeak Máximo</h6>
@@ -319,9 +310,10 @@
                     `;
                     eventsList.innerHTML += eventHTML;
                 });
-        
+
+    
                 resultsSection.classList.remove('d-none');
-        
+    
             } catch (err) {
                 errorMessage.textContent = err.message;
                 errorAlert.classList.remove('d-none');
@@ -330,6 +322,49 @@
                 searchBtn.disabled = false;
             }
         });
-        </script>        
+    
+        document.getElementById('downloadAllCSV').addEventListener('click', () => {
+            if (!data || data.length === 0) {
+                alert('Nenhum evento para exportar.');
+                return;
+            }
+
+            // Montar cabeçalho do CSV
+            let csvContent = 'Evento,Início,Fim,Duração(s),EventType Dominante,Valor EventType,LCpeak Máximo\n';
+
+            data.forEach((event, index) => {
+                const start = new Date(event.inicio);
+                const end = new Date(event.fim);
+                const duration = event.duracao_segundos.toFixed(2);
+                const eventType = event.event_type_max || '';
+                const eventTypeValue = event.event_type_max_value !== undefined ? event.event_type_max_value.toFixed(2) : '';
+                const maxLCpeak = event.max_lcpeak !== undefined ? event.max_lcpeak.toFixed(2) : '';
+
+                // Linha do CSV, escapando vírgulas no texto
+                const line = [
+                    index + 1,
+                    `"${start.toLocaleString()}"`,
+                    `"${end.toLocaleString()}"`,
+                    duration,
+                    `"${eventType}"`,
+                    eventTypeValue,
+                    maxLCpeak
+                ].join(',');
+
+                csvContent += line + '\n';
+            });
+
+            // Criar e disparar download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'eventos_sonoros.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>            
 </body>
 </html>
