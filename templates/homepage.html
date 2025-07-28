@@ -87,7 +87,6 @@
             background-color: #343a40;
             color: white;
             padding: 40px 0;
-            text-align: center;
         }
         footer h3 {
             color: #fff;
@@ -96,6 +95,9 @@
         footer p {
             color: #adb5bd;
             font-size: 0.9rem;
+        }
+        .footer-content {
+            text-align: center;
         }
         .map-section {
             padding: 60px 0;
@@ -234,12 +236,16 @@
 
     <footer class="bg-dark text-white py-4">
         <div class="container">
-            <div class="row">
-                <div class="col-md-12">
+            <div class="row align-items-center">
+                <div class="col-md-2"></div>
+                <div class="col-md-8 footer-content">
                     <h3 class="h5">SoundDash</h3>
                     <p class="mb-0">Dashboard agregador de eventos sonoros em Smart Cities</p>
                     <p class="small mt-2">Licenciatura em Engenharia Informática, Redes e Telecomunicações<br>
                     Ano-Letivo 2024/2025</p>
+                </div>
+                <div class="col-md-2 d-flex justify-content-end align-items-center">
+                    <img src="{{ url_for('static', filename='laa.png') }}" alt="LAA" class="img-fluid" style="max-height: 80px;">
                 </div>
             </div>
             <hr class="mt-4">

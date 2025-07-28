@@ -17,9 +17,24 @@
      --tab-text-active: #fff;
    }
    
+   .hero-section {
+     background-color: #26a69a;
+     color: white;
+     padding: 60px 0;
+     text-align: center;
+   }
+   .hero-section h1 {
+     font-weight: 700;
+     margin-bottom: 20px;
+   }
+   .hero-section p {
+     font-size: 1.2rem;
+     margin-bottom: 40px;
+   }
+   
    body {
      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-     background-color: #fff;
+     background-color: #f8f9fa;
      color: #333;
    }
    
@@ -70,8 +85,9 @@
    border: 1px solid #ddd;
    border-radius: 8px;
    padding: 12px;
-   background-color: #f9f9f9;
-   margin-bottom: 15px;
+   background-color: #fff;
+   margin: 0 15px 15px 15px;
+   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
  }
 
  /* Custom Dropdown Styles */
@@ -91,7 +107,7 @@
    border-radius: 6px;
    cursor: pointer;
    transition: all 0.3s ease;
-   min-height: 45px;
+   height: 38px;
  }
 
  .sensor-dropdown-toggle:hover {
@@ -227,7 +243,11 @@
 
  .dashboard-container {
    display: none; /* hidden until estações de monitorização selected */
-   margin-top: 20px;
+   margin: 20px 15px 15px 15px;
+   background-color: #fff;
+   border-radius: 10px;
+   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+   padding: 20px;
  }
 
  .section-label {
@@ -464,19 +484,58 @@
      font-size: 14px;
      color: var(--tab-text);
    }
+
+   /* Button styles from events page */
+   .btn-primary {
+     background-color: #26a69a;
+     border-color: #26a69a;
+     border-radius: 50px;
+     padding: 12px 30px;
+     font-size: 1.1rem;
+   }
+   
+   .btn-primary:hover {
+     background-color: #00695c;
+     border-color: #00695c;
+     opacity: 0.9;
+   }
+   
+   .spinner-border {
+     color: #26a69a;
+   }
+
+   /* Download button specific style */
+   .btn-download {
+     background-color: #28a745;
+     border-color: #28a745;
+     color: white;
+   }
+   
+   .btn-download:hover {
+     background-color: #218838;
+     border-color: #1e7e34;
+   }
   </style>
 </head>
 <body>
-  <div class="container-fluid py-3">
-    <div class="row mb-3">
-      <div class="col-6">
-        <h2 class="mb-0" style="color: #26a69a;">Monitorização por Intervalo</h2>
+  <section class="hero-section">
+      <div class="container position-relative">
+      <a href="/" class="btn btn-outline-light btn-sm position-absolute" style="top: -40px; right: -250px; border-radius: 30px;">
+          ← Voltar para Home
+      </a>
+      <img src="{{ url_for('static', filename='laa.png') }}" alt="LAA" class="position-absolute" style="top: 10px; right: -250px; max-height: 50px;">
+      <h1 class="display-4">Monitorização por Intervalo</h1>
+      <p class="lead">Explore eventos detectados por estações de monitorização num período específico</p>
       </div>
-      <div class="col-6 text-end">
-        <a href="/" class="btn btn-primary">← Voltar para Home</a>
-      </div>
-    </div>
-    <div class="date-picker-container">
+  </section>
+  
+
+  <div class="container-fluid mt-5">
+    <!-- Formulário de Controles -->
+    <div class="sensor-selection-container">
+      <h2 class="h3 mb-4 text-center" style="color: #26a69a;">Ferramentas de Monitorização</h2>
+      
+      <div class="date-picker-container">
       
       <div class="row w-100">
         <div class="col-md-2">
@@ -494,8 +553,8 @@
           </select>
         </div>
 
-        <div class="col-md-2">
-          <label class="form-label">Selecionar Estação de Monitorização</label>
+        <div class="col-md-3">
+          <label class="form-label">Estação de Monitorização</label>
           <div class="sensor-dropdown" id="sensor-dropdown-interval">
             <div class="sensor-dropdown-toggle" tabindex="0" onclick="toggleDropdownInterval()">
               <span id="dropdown-text-interval">Escolher estação de monitorização...</span>
@@ -527,28 +586,27 @@
           <input type="datetime-local" id="start_date" class="form-control" required>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label for="end_date" class="form-label">Data e Hora de Fim</label>
           <input type="datetime-local" id="end_date" class="form-control" required>
-        </div>
-
-        <div class="col-md-2 d-flex align-items-end">
-          <button type="button" class="btn btn-success w-100" onclick="fetchDataAndCompute(event)" id="search-btn-interval" disabled>
-            Selecionar estação de monitorização primeiro
-          </button>
         </div>
       </div>
 
       <div class="row mt-4">
         <div class="col-md-12 text-center">
-          <form method="GET" action="/download_csv" id="download-form" class="d-none">
-            <input type="hidden" id="start_hidden" name="start">
-            <input type="hidden" id="end_hidden" name="end">
-
-            <button type="submit" class="btn btn-primary px-4" id="download-btn">
-              Descarregar CSV
+          <div class="d-inline-flex gap-3 align-items-center">
+            <button type="button" class="btn btn-primary w-100" onclick="fetchDataAndCompute(event)" id="search-btn-interval" disabled style="border-radius: 50px; padding: 12px 30px; font-size: 1.1rem;">
+              <span class="spinner-border spinner-border-sm me-2 d-none" id="loadingSpinner"></span>
+              Selecionar estação de monitorização primeiro
             </button>
-          </form>
+            <form method="GET" action="/download_csv" id="download-form" class="d-none">
+              <input type="hidden" id="start_hidden" name="start">
+              <input type="hidden" id="end_hidden" name="end">
+              <button type="submit" class="btn btn-download px-4" id="download-btn">
+                Descarregar CSV
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -584,6 +642,7 @@
         Selecione os parâmetros e intervalo de tempo acima para gerar resultados.
       </div>
     </div>
+    </div>
   </div>
 
   <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
@@ -614,12 +673,12 @@ function updateDropdownTextInterval() {
   const count = selectedSensorsInterval.size;
 
   if (count === 0) {
-    dropdownText.textContent = 'Escolher estação de monitorização...';
+    dropdownText.textContent = 'Escolher estação pretendida...';
   } else if (count === 1) {
     const [id] = [...selectedSensorsInterval];
     dropdownText.innerHTML = `Estação de Monitorização ${id} <span class="selection-count">1</span>`;
   } else {
-    dropdownText.innerHTML = `${count} estações de monitorização selecionadas <span class="selection-count">${count}</span>`;
+    dropdownText.innerHTML = `${count} estações selecionadas <span class="selection-count">${count}</span>`;
   }
 }
 
@@ -700,6 +759,12 @@ async function fetchDataAndCompute(event) {
   const spectogramContainer = document.getElementById('spectogram-container');
   const infoMessage = document.getElementById('info-message');
   const dashboardContainer = document.getElementById('dashboard-container-interval');
+  const searchBtn = document.getElementById('search-btn-interval');
+  const spinner = document.getElementById('loadingSpinner');
+
+  // Show spinner and disable button
+  spinner.classList.remove('d-none');
+  searchBtn.disabled = true;
 
   dashboardContainer.style.display = 'block';
 
@@ -866,10 +931,10 @@ async function fetchDataAndCompute(event) {
         <tr><td>LCpeakT</td><td>${isNaN(getMax(lcpeakTValues)) ? 'Sem dados' : getMax(lcpeakTValues).toFixed(1)} </td></tr>
         <tr><td>LA50</td><td>${isNaN(computePercentile(laeaValues,50)) ? 'Sem dados' : computePercentile(laeaValues,50).toFixed(1)} </td></tr>
         <tr><td>LA90</td><td>${isNaN(computePercentile(laeaValues,10)) ? 'Sem dados' : computePercentile(laeaValues,10).toFixed(1)} </td></tr>
-        <tr><td>Lday</td><td>${isNaN(Lday) ? 'Sem dados' : Lday.toFixed(1)} dB</td></tr>
-        <tr><td>Levening</td><td>${isNaN(Levening) ? 'Sem dados' : Levening.toFixed(1)} dB</td></tr>
-        <tr><td>Lnight</td><td>${isNaN(Lnight) ? 'Sem dados' : Lnight.toFixed(1)} dB</td></tr>
-        <tr><td>Lden</td><td>${isNaN(Lden) ? 'Sem dados' : Lden.toFixed(1)} dB</td></tr>
+        <tr><td>Lday</td><td>${isNaN(Lday) ? 'Sem dados' : Lday.toFixed(1)} </td></tr>
+        <tr><td>Levening</td><td>${isNaN(Levening) ? 'Sem dados' : Levening.toFixed(1)} </td></tr>
+        <tr><td>Lnight</td><td>${isNaN(Lnight) ? 'Sem dados' : Lnight.toFixed(1)} </td></tr>
+        <tr><td>Lden</td><td>${isNaN(Lden) ? 'Sem dados' : Lden.toFixed(1)} </td></tr>
       </tbody>
     </table>
   `;
@@ -889,10 +954,17 @@ async function fetchDataAndCompute(event) {
       resultContainer.innerHTML = `Erro ao obter dados: ${error.message}`;
       document.getElementById('download-btn').disabled = true;
       document.getElementById('download-btn').innerText = 'Descarregar CSV';
+    } finally {
+      // Hide spinner and re-enable button
+      spinner.classList.add('d-none');
+      searchBtn.disabled = false;
     }
   } else {
     resultContainer.innerHTML = '';
     document.getElementById('download-form').classList.add('d-none');
+    // Hide spinner and re-enable button
+    spinner.classList.add('d-none');
+    searchBtn.disabled = false;
   }
 }
 

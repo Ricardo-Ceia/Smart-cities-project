@@ -146,12 +146,13 @@
 </head>
 <body>
     <section class="hero-section">
-        <div class="container">
-            <a href="/" class="btn btn-outline-light btn-sm position-fixed top-0 end-0 m-3" style="border-radius: 30px;">
-                ← Voltar para Home
-            </a>
-            <h1 class="display-4">Análise de Eventos Sonoros</h1>
-            <p class="lead">Explore eventos detectados por estações de monitorização num período específico</p>
+        <div class="container position-relative">
+        <a href="/" class="btn btn-outline-light btn-sm position-absolute" style="top: -40px; right: -250px; border-radius: 30px;">
+            ← Voltar para Home
+        </a>
+        <img src="{{ url_for('static', filename='laa.png') }}" alt="LAA" class="position-absolute" style="top: 10px; right: -250px; max-height: 50px;">
+        <h1 class="display-4">Monitorização ao Vivo</h1>
+        <p class="lead">Explore eventos detectados por estações de monitorização num período específico</p>
         </div>
     </section>
 
