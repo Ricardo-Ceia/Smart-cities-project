@@ -24,6 +24,7 @@ INFLUXDB_BUCKET = "bucket1"
 
 def to_flux_time(dt_str):
     dt = datetime.fromisoformat(dt_str)
+    dt -= timedelta(hours=1)  # Subtrai 1 hora
     return dt.strftime('%Y-%m-%dT%H:%M:%S') + "Z"
 
 def query_influxdb(variable, start_timestamp, end_timestamp):
@@ -368,7 +369,8 @@ def freq_key(col):
 def download_csv():
     start_raw = request.args.get('start')  
     end_raw = request.args.get('end')      
-
+    print("1",start_raw)
+    print("2",end_raw)
     if not start_raw or not end_raw:
         return "Falta o intervalo de tempo.", 400
 
@@ -381,7 +383,7 @@ def download_csv():
       |> filter(fn: (r) => r._measurement == "sound_level")
       |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
     '''
-    
+    print("query_test",flux_query)
     client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
     query_api = client.query_api()
     tables = query_api.query(flux_query)

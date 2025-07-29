@@ -762,17 +762,30 @@ async function fetchDataAndCompute(event) {
   const searchBtn = document.getElementById('search-btn-interval');
   const spinner = document.getElementById('loadingSpinner');
 
-  // Show spinner and disable button
-  spinner.classList.remove('d-none');
-  searchBtn.disabled = true;
+  // Show spinner and disable button (with safety checks)
+  if (spinner) {
+    spinner.classList.remove('d-none');
+  }
+  if (searchBtn) {
+    searchBtn.disabled = true;
+  }
 
-  dashboardContainer.style.display = 'block';
+  if (dashboardContainer) {
+    dashboardContainer.style.display = 'block';
+  }
 
   const startDateVal = document.getElementById('start_date').value;
   const endDateVal = document.getElementById('end_date').value;
 
   if (!startDateVal || !endDateVal) {
     alert("Por favor, selecione as datas de início e fim.");
+    // Hide spinner and re-enable button in case of early return
+    if (spinner) {
+      spinner.classList.add('d-none');
+    }
+    if (searchBtn) {
+      searchBtn.disabled = false;
+    }
     return;
   }
 
@@ -955,16 +968,24 @@ async function fetchDataAndCompute(event) {
       document.getElementById('download-btn').disabled = true;
       document.getElementById('download-btn').innerText = 'Descarregar CSV';
     } finally {
-      // Hide spinner and re-enable button
-      spinner.classList.add('d-none');
-      searchBtn.disabled = false;
+      // Hide spinner and re-enable button (with safety checks)
+      if (spinner) {
+        spinner.classList.add('d-none');
+      }
+      if (searchBtn) {
+        searchBtn.disabled = false;
+      }
     }
   } else {
     resultContainer.innerHTML = '';
     document.getElementById('download-form').classList.add('d-none');
-    // Hide spinner and re-enable button
-    spinner.classList.add('d-none');
-    searchBtn.disabled = false;
+    // Hide spinner and re-enable button (with safety checks)
+    if (spinner) {
+      spinner.classList.add('d-none');
+    }
+    if (searchBtn) {
+      searchBtn.disabled = false;
+    }
   }
 }
 

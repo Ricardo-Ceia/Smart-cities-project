@@ -332,13 +332,11 @@
 
     function calculateFromTime(now, interval) {
       switch (interval) {
-        case '1h': return now - 60 * 60 * 1000;
-        case '1d': return now - 24 * 60 * 60 * 1000;
-        case '1w': return now - 7 * 24 * 60 * 60 * 1000;
-        case '1mo': return now - 30 * 24 * 60 * 60 * 1000;
-        case '5m':
-        default: return now - 5 * 60 * 1000;
+        case '1h':  from = 'now-1h'; break;
+        case '1d':  from = 'now-1d'; break;
+        default:    from = 'now-5m';
       }
+      return from;
     }
 
     async function loadMainChart(from, to) {

@@ -542,7 +542,6 @@
           <select id="parametroSelect" class="parameter-selector">
             <option value="four_metrics">LAeq,LCpeak,LAFmax,LAFmin</option>
             <option>LAEA</option>
-            <option>LAeq</option>
             <option>LCpeak</option>
             <option>LAmin</option>
             <option>LAmax</option>
@@ -767,38 +766,27 @@
       const now = Date.now();
     let from;
     switch (interval) {
-        case '1h':  from = now - 60 * 60 * 1000; break;
-        case '1d':  from = now - 24 * 60 * 60 * 1000; break;
-        case '5m':
-        default:    from = now - 5 * 60 * 1000;
+        case '1h':  from = 'now-1h'; break;
+        case '1d':  from = 'now-1d'; break;
+        default:    from = 'now-5m';
     }
 
     const baseUrls = {
         four_metrics: "http://localhost:3000/d-solo/cerw46cubqbk0b/4-metrcis",
         LAEA:    "http://localhost:3000/d-solo/eej0pdkup3rpce/laea",
-        LAeq:    "http://localhost:3000/d-solo/dej0r21ki3ri8e/laeq",
         LCpeak:  "http://localhost:3000/d-solo/fej0qrt2av8qod/lcpeak",
         LAmin:   "http://localhost:3000/d-solo/eej2n5j54d1c0a/lafmin",
-        LAmax:   "http://localhost:3000/d-solo/eej0qhnp8j5s0b/lafmax",
-        LCpeakT: "http://localhost:3000/d-solo/bej0rd0dtua68d/lcpeakt",
-        LAmaxT:  "http://localhost:3000/d-solo/fej2mx82t08hsc/lafmaxt",
-        LAminT:  "http://localhost:3000/d-solo/eej2nbqw1xm9sf/lafmint"
+        LAmax:   "http://localhost:3000/d-solo/eej0qhnp8j5s0b/lafmax"
     };
 
     const selectedUrl = baseUrls[parametro] || baseUrls['LAEA'];
-        
+    
     // ✅ CORREÇÃO PRINCIPAL: Não usar encodeURIComponent para var-sensors
     const iframeUrl = `${selectedUrl}?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`;
     const frequencyChartURL = `http://localhost:3000/d-solo/demjmzz4e6uwwe/frequency-band?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`;
     const spectogramURL = `http://localhost:3000/d-solo/een6a6zegi1hca/spectogram?orgId=1&from=${from}&to=now&timezone=browser&refresh=5s&var-sensors=${estacoesMonitorizacao}&panelId=1&__feature.dashboardSceneSolo`
     const soundEventsURL = `http://localhost:3000/d-solo/berex2ov2g934d/events-espectogram?orgId=1&from=${from}&to=now&timezone=browser&panelId=1&__feature.dashboardSceneSolo`
-    // 🔍 DEBUG: Logs para verificar os valores
-    console.log("Estações de monitorização selecionadas:", selectedSensors);
-    console.log("Estações de monitorização formatadas:", estacoesMonitorizacao);
-    console.log("Parâmetro:", parametro);
-    console.log("URL completo:", iframeUrl);
-    console.log("Timestamp from:", new Date(from).toISOString());
-    console.log("Timestamp to:", new Date(now).toISOString());
+   
         
     document.getElementById('liveChart').src = iframeUrl;
     document.getElementById('spectogram-chart').src = spectogramURL;
