@@ -22,6 +22,22 @@ INFLUXDB_TOKEN = "pnHl2KOX92zF2cLyVNhoI6EW9dRlBb1FJhIyVK2XdwUDvXTjmv6ool8SObJbcO
 INFLUXDB_ORG = "Isel"
 INFLUXDB_BUCKET = "bucket1"
 
+
+
+def load_id_to_name_map(csv_path='./class_labels_indices.csv'):
+    id_to_name = {}
+    with open(csv_path, mode='r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            index = int(row['index'])
+            display_name = row['display_name'].strip('"')  # remove quotes if any
+            id_to_name[index] = display_name
+    return id_to_name
+
+id_to_name = load_id_to_name_map()
+
+print(f"id_to_name:{id_to_name}")
+
 def to_flux_time(dt_str):
     dt = datetime.fromisoformat(dt_str)
     dt -= timedelta(hours=1)  # Subtrai 1 hora
@@ -56,6 +72,17 @@ def query_influxdb(variable, start_timestamp, end_timestamp):
 
     return data
 
+def calcular_every_seconds(start_time_str, end_time_str, max_points=10000, sample_rate=4):
+    start = datetime.fromisoformat(start_time_str)
+    end = datetime.fromisoformat(end_time_str)
+    intervalo_segundos = (end - start).total_seconds()
+    total_pontos = intervalo_segundos * sample_rate
+    
+    if total_pontos <= max_points:
+        return 1  # sem agregação (1 segundo)
+    else:
+        return int((total_pontos // max_points) + 1)
+
 @app.route('/api/get_data_for_calculation', methods=['POST'])
 def get_data_for_calculation():
     data = request.get_json()
@@ -65,14 +92,23 @@ def get_data_for_calculation():
     start_time = datetime.utcfromtimestamp(start_ts / 1000).isoformat() + "Z"
     end_time = datetime.utcfromtimestamp(end_ts / 1000).isoformat() + "Z"
 
-    variables = ["LAeq", "LAFmin", "LAFmax", "LCpeak","LAEA"]
+    variables = ["LAEA", "LAFmin", "LAFmax", "LCpeak"]
     response_data = {var: [] for var in variables}
-
+    #10000 é o valor de pontos maximo aguentado
+    every_seconds = calcular_every_seconds(start_time, end_time, max_points=10000)
+    print(f"every_seconds:{every_seconds}")
+    aggregate_func = "mean"
     try:
         client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
         query_api = client.query_api()
 
         for var in variables:
+            if var=="LAEA" :
+                aggregate_func = "mean"
+            elif var=="LAFmin":
+                aggregate_func = "min"
+            else:
+                aggregate_func='max'
             query = f'''
                 from(bucket: "{INFLUXDB_BUCKET}")
                 |> range(start: time(v: "{start_time}"), stop: time(v: "{end_time}"))
@@ -82,16 +118,20 @@ def get_data_for_calculation():
                 |> filter(fn: (r) => r.sensor_id == "{sensor_id}")
                 |> keep(columns: ["_time", "{var}"])
                 |> rename(columns: {{"{var}": "_value"}})
-            '''
-
+                |> aggregateWindow(every: {every_seconds}s, fn: {aggregate_func}, createEmpty: false)
+                
+                '''
+            
+            
             tables = query_api.query(org=INFLUXDB_ORG, query=query)
 
             for table in tables:
                 for record in table.records:
                     response_data[var].append({
-                        'time': record.get_time().isoformat(),
+                        #'time': record.get_time().isoformat(),
                         'value': record.get_value()
                     })
+            print(f"[INFO] Retrieved {len(response_data[var])} records for variable '{var}'")
         return jsonify(response_data)
 
     except Exception as e:
@@ -147,7 +187,7 @@ def get_lden_data():
                     values.append(record.get_value())
 
             results[label] = values
-
+            print(f"[INFO] Retrieved LDEN {len(results)} records '")
         except Exception as e:
             print(f"Erro ao consultar {label}: {e}")
             results[label] = []
@@ -157,9 +197,48 @@ def get_lden_data():
 
     return jsonify(results)
 
-@app.route('/events',methods=['GET'])
-def events():
-    return render_template("events.html")
+@app.route('/api/classification', methods=['POST'])
+def get_classification_data():
+    query = f'''
+        from(bucket: "{INFLUXDB_BUCKET}")
+        |> range(start: -1h)
+        |> filter(fn: (r) =>
+            r._measurement == "sound_level" and
+            (r._field == "Class1ID" or
+            r._field == "Class1Score1" or
+            r._field == "Class2ID" or
+            r._field == "Class2Score2" or
+            r._field == "Class3ID" or
+            r._field == "Class3Score3")
+        )
+        |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+        |> sort(columns: ["_time"], desc: true)
+        |> limit(n: 1)
+    '''
+
+    try:
+        client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
+        query_api = client.query_api()
+        tables = query_api.query(org=INFLUXDB_ORG, query=query)
+
+        for table in tables:
+            for record in table.records:
+                payload = record.values
+                class1_id = int(payload.get("Class1ID", 0))
+                class2_id = int(payload.get("Class2ID", 0))
+                class3_id = int(payload.get("Class3ID", 0))
+
+                return jsonify({
+                    "Class1ID": id_to_name.get(class1_id),
+                    "Class1Score1": float(payload.get("Class1Score1", 0)),
+                    "Class2ID": id_to_name.get(class2_id),
+                    "Class2Score2": float(payload.get("Class2Score2", 0)),
+                    "Class3ID": id_to_name.get(class3_id),
+                    "Class3Score3": float(payload.get("Class3Score3", 0))
+                })
+        return jsonify({"error": "No data found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/sensor-events', methods=['POST'])

@@ -541,8 +541,8 @@
         <div class="col-md-2">
           <label for="variable" class="form-label">Parâmetro Acústico</label>
           <select name="variable" id="variable" class="form-select" required>
-            <option value="four_metrics">LAEA,LAeq,LAFmaxT,LAFminT</option>
-            <option>LAEA</option>
+            <option value="four_metrics">LAF,LAeq,LAFmaxT,LAFminT</option>
+            <option>LAF</option>
             <option>LAeq</option>
             <option>LCpeak</option>
             <option>LAFmin</option>
@@ -738,8 +738,10 @@ window.addEventListener('load', () => {
   updateDropdownTextInterval();
   updateDownloadButtonVisibility(); // NOVO
 });
-
+let countCalls = 0;
 async function fetchDataAndCompute(event) {
+  countCalls+=1;
+  console.log("countCalls:",countCalls)
   event.preventDefault();
 
   if (selectedSensorsInterval.size === 0) {
@@ -870,7 +872,7 @@ async function fetchDataAndCompute(event) {
   ]);
 
   // Computações dos dados gerais
-  const laeqValues = (data.LAeq || []).map(d => d.value);
+  //const laeqValues = (data.LAeq || []).map(d => d.value);
   const lafminTValues = (data.LAFmin || []).map(d => d.value);
   const lafmaxTValues = (data.LAFmax || []).map(d => d.value);
   const lcpeakTValues = (data.LCpeak || []).map(d => d.value);
@@ -938,7 +940,7 @@ async function fetchDataAndCompute(event) {
         <tr><th>Métrica</th><th>Valor (dB)</th></tr>
       </thead>
       <tbody>
-        <tr><td>LAeq</td><td>${isNaN(computeLAeq(laeqValues)) ? 'Sem dados' : computeLAeq(laeqValues).toFixed(1)} </td></tr>
+        <tr><td>LAeq</td><td>${isNaN(computeLAeq(laeaValues)) ? 'Sem dados' : computeLAeq(laeaValues).toFixed(1)} </td></tr>
         <tr><td>LAFminT</td><td>${isNaN(getMin(lafminTValues)) ? 'Sem dados' : getMin(lafminTValues).toFixed(1)} </td></tr>
         <tr><td>LAFmaxT</td><td>${isNaN(getMax(lafmaxTValues)) ? 'Sem dados' : getMax(lafmaxTValues).toFixed(1)} </td></tr>
         <tr><td>LCpeakT</td><td>${isNaN(getMax(lcpeakTValues)) ? 'Sem dados' : getMax(lcpeakTValues).toFixed(1)} </td></tr>
@@ -1032,7 +1034,7 @@ window.addEventListener('load', () => {
   updateDownloadButtonVisibility();
 
   // Automatically trigger fetch
-  fetchDataAndCompute(new Event('submit'));
+  //fetchDataAndCompute(new Event('submit'));
 });
   </script>
 </body>
